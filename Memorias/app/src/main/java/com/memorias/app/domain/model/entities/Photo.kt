@@ -1,0 +1,22 @@
+package com.memorias.app.domain.model.entities
+
+import java.time.Instant
+import java.time.LocalDate
+
+data class Photo(
+    val id: Long,
+    val dateTaken: Instant,
+    val year: Int,
+    val month: Int,
+    val day: Int,
+    val displayName: String,
+    val sizeBytes: Long,
+    val mimeType: String,
+    val width: Int = 0,
+    val height: Int = 0,
+    val location: GeoLocation? = null,
+    ) {
+    val yearsAgo: Int get() = LocalDate.now().year - year
+    val stableFallbackHash: String
+        get() = "${id}_${sizeBytes}_${dateTaken.toEpochMilli()}"
+}
