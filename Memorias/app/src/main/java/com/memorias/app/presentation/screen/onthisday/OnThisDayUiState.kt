@@ -1,7 +1,11 @@
 package com.memorias.app.presentation.screen.onthisday
 
+import android.content.ContentUris
+import android.net.Uri
+import android.provider.MediaStore
 import com.memorias.app.domain.model.DeletionQueue
 import com.memorias.app.domain.model.OnThisDayGroup
+import com.memorias.app.domain.model.Photo
 import com.memorias.app.domain.model.PhotoFilter
 import com.memorias.app.domain.model.enums.SessionSize
 

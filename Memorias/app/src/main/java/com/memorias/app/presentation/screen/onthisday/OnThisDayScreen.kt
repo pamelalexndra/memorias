@@ -33,25 +33,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.memorias.MemoriasApplication
+import com.memorias.app.MemoriasApplication
+import com.memorias.app.core.factory.MemoriasViewModelFactory
 import com.memorias.app.domain.model.enums.SwipeAction
-import com.memorias.core.factory.MemoriasViewModelFactory
-import com.memorias.domain.model.SwipeAction
-import com.memorias.presentation.component.DeletionQueueBar
-import com.memorias.presentation.component.EmptyState
-import com.memorias.presentation.component.OnThisDayShimmer
-import com.memorias.presentation.component.SessionSummaryDialog
-import com.memorias.presentation.component.SwipeablePhotoCard
-import com.memorias.presentation.component.YearTimeline
-import com.memorias.presentation.extension.yearsAgoLabel
-import com.memorias.presentation.screen.deleteconfirm.DeleteConfirmScreen
-import com.memorias.presentation.theme.BrownLight
-import com.memorias.presentation.theme.BrownMid
-import com.memorias.presentation.theme.CreamWarm
-import com.memorias.presentation.theme.Siena
-import com.memorias.presentation.theme.SwipeFav
-
+import com.memorias.app.presentation.component.DeletionQueueBar
+import com.memorias.app.presentation.component.OnThisDayShimmer
+import com.memorias.app.presentation.component.SessionSummaryDialog
+import com.memorias.app.presentation.component.SwipeablePhotoCard
+import com.memorias.app.presentation.component.YearTimeline
+import com.memorias.app.presentation.component.statusindicatos.EmptyState
+import com.memorias.app.presentation.extension.yearsAgoLabel
+import com.memorias.app.presentation.screen.delete.DeleteConfirmScreen
+import com.memorias.app.presentation.theme.BrownLight
+import com.memorias.app.presentation.theme.BrownMid
+import com.memorias.app.presentation.theme.CreamWarm
+import com.memorias.app.presentation.theme.Siena
+import com.memorias.app.presentation.theme.SwipeFav
+import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun OnThisDayScreen(
     viewModel: OnThisDayViewModel = run {

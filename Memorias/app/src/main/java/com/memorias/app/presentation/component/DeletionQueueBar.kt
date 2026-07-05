@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.extension.formatBytes
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteSweep
+import com.memorias.app.presentation.theme.SwipeDelete
 
 
 @Composable

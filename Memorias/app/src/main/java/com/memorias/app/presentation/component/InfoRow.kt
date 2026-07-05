@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.theme.BrownMid
 
 @Composable
-private fun InfoRow(
+fun InfoRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String,

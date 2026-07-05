@@ -30,6 +30,8 @@ import com.memorias.app.presentation.theme.BrownLight
 import com.memorias.app.presentation.theme.BrownMid
 import com.memorias.app.presentation.theme.Siena
 import com.memorias.app.presentation.theme.SwipeFav
+import androidx.compose.material.icons.filled.Undo
+import com.memorias.app.presentation.extension.yearsAgoLabel
 
 @Composable
 fun ReviewingContent(

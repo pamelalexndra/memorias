@@ -1,105 +1,74 @@
 package com.memorias.app.widget
 
 import android.content.Context
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Text
+import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
-import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
+import androidx.glance.background
+import androidx.glance.currentState
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
+import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
+import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.state.GlanceStateDefinition
+import androidx.glance.state.PreferencesGlanceStateDefinition
+import androidx.glance.text.FontWeight
+import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import com.memorias.app.MainActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.format.TextStyle
 
 class FavoritesGlanceWidget : GlanceAppWidget() {
 
-    override val sizeMode = SizeMode.Exact
+    override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
+    override val sizeMode: SizeMode = SizeMode.Exact
 
-    override suspend fun provideContent(context: Context, id: GlanceId, state: Any?) {
-        val widgetState = loadState(context)
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+
         provideContent {
+            val prefs        = currentState<Preferences>()
+            val collagePath  = prefs[WidgetPreferenceKeys.COLLAGE_FILE]
+            val photoCount   = prefs[WidgetPreferenceKeys.PHOTO_COUNT] ?: 0
+            val isNearestDay = prefs[WidgetPreferenceKeys.IS_NEAREST_DAY] ?: false
+            val nearestDesc  = prefs[WidgetPreferenceKeys.NEAREST_DAY_DESC] ?: ""
+
             GlanceTheme {
-                WidgetContent(widgetState)
-            }
-        }
-    }
-
-    private suspend fun loadState(context: Context): WidgetState = withContext(Dispatchers.IO) {
-        val entryPoint = EntryPointAccessors.fromApplication(
-            context.applicationContext,
-            WidgetEntryPoint::class.java,
-        )
-        val repo = entryPoint.favoriteRepository()
-        val today = LocalDate.now()
-
-        val exact = repo.getByMonthDay(today.monthValue, today.dayOfMonth)
-            .getOrNull()
-            .orEmpty()
-            .take(MAX_WIDGET_PHOTOS)
-
-        if (exact.isNotEmpty()) {
-            return@withContext WidgetState.Loaded(favorites = exact, isNearestDay = false)
-        }
-
-        val nearest = repo.getNearestToToday(maxResults = MAX_WIDGET_PHOTOS)
-            .getOrNull()
-            .orEmpty()
-
-        if (nearest.isEmpty()) {
-            return@withContext WidgetState.Loaded(favorites = emptyList())
-        }
-
-        val nearestFav = nearest.first()
-        val nearDate = java.time.Instant.ofEpochMilli(nearestFav.dateTaken.toEpochMilli())
-            .atZone(java.time.ZoneId.systemDefault())
-            .toLocalDate()
-        val description = "${nearDate.dayOfMonth}/${nearDate.monthValue}"
-
-        WidgetState.Loaded(
-            favorites = nearest,
-            isNearestDay = true,
-            nearestDayDescription = description,
-        )
-    }
-
-    companion object {
-        const val MAX_WIDGET_PHOTOS = 6
-    }
-}
-
-@Composable
-private fun WidgetContent(state: WidgetState) {
-    Box(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(ColorProvider(Color(0xFF1F1A14)))
-            .cornerRadius(20.dp)
-            .clickable(actionStartActivity<MainActivity>()),
-    ) {
-        when (state) {
-            is WidgetState.Loading -> WidgetLoadingPlaceholder()
-            is WidgetState.Loaded -> {
-                if (state.favorites.isEmpty()) {
-                    WidgetEmptyContent()
-                } else {
-                    WidgetPhotosContent(state)
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxSize()
+                        .background(ColorProvider(androidx.compose.ui.graphics.Color(0xFF1F1A14)))
+                        .cornerRadius(20.dp)
+                        .clickable(actionStartActivity<MainActivity>()),
+                ) {
+                    when {
+                        photoCount == 0 || collagePath == null -> EmptyContent()
+                        else -> CollageContent(
+                            collagePath  = collagePath,
+                            photoCount   = photoCount,
+                            isNearestDay = isNearestDay,
+                            nearestDesc  = nearestDesc,
+                        )
+                    }
                 }
             }
         }
@@ -107,8 +76,13 @@ private fun WidgetContent(state: WidgetState) {
 }
 
 @Composable
-private fun WidgetPhotosContent(state: WidgetState.Loaded) {
-    Column(modifier = GlanceModifier.fillMaxSize().padding(12.dp)) {
+private fun CollageContent(
+    collagePath: String,
+    photoCount: Int,
+    isNearestDay: Boolean,
+    nearestDesc: String,
+) {
+    Column(modifier = GlanceModifier.fillMaxSize().padding(8.dp)) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -116,115 +90,59 @@ private fun WidgetPhotosContent(state: WidgetState.Loaded) {
             Text(
                 text = "Memorias",
                 style = TextStyle(
-                    color = ColorProvider(Color(0xFFF5C842)),
-                    fontSize = 12.sp,
+                    color      = ColorProvider(androidx.compose.ui.graphics.Color(0xFFF5C842)),
+                    fontSize   = 12.sp,
                     fontWeight = FontWeight.Bold,
                 ),
             )
             Spacer(GlanceModifier.defaultWeight())
-            if (state.isNearestDay) {
+            if (isNearestDay) {
                 Text(
-                    text = "Cercanas al ${state.nearestDayDescription}",
+                    text = "Cerca del $nearestDesc",
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFF8C7A6B)),
+                        color    = ColorProvider(androidx.compose.ui.graphics.Color(0xFF8C7A6B)),
                         fontSize = 9.sp,
                     ),
                 )
             }
         }
 
-        Spacer(GlanceModifier.height(8.dp))
+        Spacer(GlanceModifier.height(6.dp))
 
-        LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-            items(state.favorites.chunked(2)) { rowPhotos ->
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    rowPhotos.forEach { favorite ->
-                        WidgetPhotoCell(favorite, modifier = GlanceModifier.defaultWeight())
-                        if (rowPhotos.size == 1) {
-                            Box(modifier = GlanceModifier.defaultWeight().height(80.dp))
-                        }
-                    }
-                }
-                Spacer(GlanceModifier.height(4.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun WidgetPhotoCell(favorite: Favorite, modifier: GlanceModifier = GlanceModifier) {
-    val uri = mediaStoreUriFromId(favorite.mediaStoreId)
-    Box(
-        modifier = modifier
-            .height(80.dp)
-            .padding(horizontal = 2.dp)
-            .cornerRadius(10.dp),
-        contentAlignment = Alignment.BottomStart,
-    ) {
-        androidx.glance.Image(
-            provider = androidx.glance.ImageProvider(uri),
-            contentDescription = "Favorita ${favorite.yearTaken}",
-            modifier = GlanceModifier.fillMaxSize().cornerRadius(10.dp),
-            contentScale = ContentScale.Crop,
-        )
-        Box(
-            modifier = GlanceModifier
-                .padding(4.dp)
-                .cornerRadius(4.dp)
-                .background(ColorProvider(Color.Black.copy(alpha = 0.6f))),
-        ) {
-            Text(
-                text = "${favorite.yearTaken}",
-                style = TextStyle(
-                    color = ColorProvider(Color.White),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                ),
-                modifier = GlanceModifier.padding(horizontal = 4.dp, vertical = 1.dp),
+        val bitmap = BitmapFactory.decodeFile(collagePath)
+        if (bitmap != null) {
+            Image(
+                provider           = ImageProvider(bitmap),
+                contentDescription = "$photoCount foto favorita${if (photoCount != 1) "s" else ""}",
+                contentScale       = ContentScale.Crop,
+                modifier           = GlanceModifier
+                    .fillMaxSize()
+                    .cornerRadius(12.dp),
             )
         }
     }
 }
 
 @Composable
-private fun WidgetLoadingPlaceholder() {
-    Box(
-        modifier = GlanceModifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "Cargando...",
-            style = TextStyle(
-                color = ColorProvider(Color(0xFF8C7A6B)),
-                fontSize = 12.sp,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun WidgetEmptyContent() {
+private fun EmptyContent() {
     Column(
-        modifier = GlanceModifier.fillMaxSize().padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier            = GlanceModifier.fillMaxSize().padding(16.dp),
+        verticalAlignment   = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Sin favoritas aun",
+            text  = "Sin favoritas aun",
             style = TextStyle(
-                color = ColorProvider(Color(0xFF8C7A6B)),
-                fontSize = 13.sp,
+                color      = ColorProvider(androidx.compose.ui.graphics.Color(0xFF8C7A6B)),
+                fontSize   = 13.sp,
                 fontWeight = FontWeight.Bold,
             ),
         )
         Spacer(GlanceModifier.height(6.dp))
         Text(
-            text = "Marca fotos como favoritas en la app",
+            text  = "Marca fotos como favoritas en la app",
             style = TextStyle(
-                color = ColorProvider(Color(0xFF4A3728)),
+                color    = ColorProvider(androidx.compose.ui.graphics.Color(0xFF4A3728)),
                 fontSize = 10.sp,
             ),
         )

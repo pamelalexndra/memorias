@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.theme.Siena
 
 @Composable
-private fun EmptyStateIllustration() {
+fun EmptyStateIllustration() {
     Box(contentAlignment = Alignment.Center) {
         Box(modifier = Modifier.size(120.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(28.dp)))
         Box(modifier = Modifier.size(64.dp).background(Siena.copy(alpha = 0.18f), RoundedCornerShape(50)))

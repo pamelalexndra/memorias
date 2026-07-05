@@ -2,10 +2,12 @@ package com.memorias.app.core.di
 
 import android.content.Context
 import com.memorias.app.data.repository.AndroidPhotoRepository
+import com.memorias.app.data.repository.FakeSyncRepository
 import com.memorias.app.domain.repository.FavoriteRepository
 import com.memorias.app.domain.repository.PhotoRepository
 import com.memorias.app.domain.repository.PreferencesRepository
 import com.memorias.app.domain.repository.SessionRepository
+import com.memorias.app.domain.repository.SyncRepository
 import com.memorias.app.domain.usecase.AddFavoriteUseCase
 import com.memorias.app.domain.usecase.ExecuteDeletionUseCase
 import com.memorias.app.domain.usecase.GetOnThisDayPhotosUseCase
@@ -22,6 +24,9 @@ import com.memorias.app.domain.usecase.UpdatePreferencesUseCase
 class AppContainer(context: Context) {
 
     private val appContext: Context = context.applicationContext
+    private val syncRepository: SyncRepository by lazy {
+        FakeSyncRepository()
+    }
 
     val photoRepository: PhotoRepository by lazy {
         AndroidPhotoRepository(appContext)

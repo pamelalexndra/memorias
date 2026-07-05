@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.theme.BrownMid
 
 @Composable
-private fun StatPill(label: String, value: String, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+fun StatPill(label: String, value: String, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
     Surface(shape = RoundedCornerShape(14.dp), color = color.copy(alpha = 0.12f), modifier = modifier) {
         Column(
             modifier = Modifier.padding(14.dp),
