@@ -20,7 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.extension.formatBytes
-import com.memorias.app.presentation.theme.SwipeDelete
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DeleteSweep
 
 
 @Composable

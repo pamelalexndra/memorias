@@ -10,7 +10,6 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.memorias.app.widget.FavoritesGlanceWidget
-import com.memorias.widget.FavoritesGlanceWidget
 import java.time.Duration
 
 class WidgetRefreshWorker(

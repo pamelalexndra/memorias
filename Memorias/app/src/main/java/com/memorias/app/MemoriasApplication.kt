@@ -5,7 +5,7 @@ import androidx.work.Configuration
 import com.memorias.app.core.di.AppContainer
 import com.memorias.app.core.factory.MemoriasWorkerFactory
 import com.memorias.app.worker.SyncWorker
-import com.memorias.app.worker.WidgetRefreshWorker
+import com.memorias.worker.WidgetRefreshWorker
 
 class MemoriasApplication : Application(), Configuration.Provider {
 

@@ -1,6 +1,9 @@
 package com.memorias.app.core.factory
 
 import android.content.Context
+import androidx.work.ListenableWorker
+import androidx.work.WorkerFactory
+import androidx.work.WorkerParameters
 import com.memorias.app.core.di.AppContainer
 import com.memorias.app.worker.SyncWorker
 import com.memorias.worker.WidgetRefreshWorker
