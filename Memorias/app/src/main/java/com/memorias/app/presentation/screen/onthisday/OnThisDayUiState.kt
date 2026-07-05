@@ -1,5 +1,10 @@
 package com.memorias.app.presentation.screen.onthisday
 
+import com.memorias.app.domain.model.entities.DeletionQueue
+import com.memorias.app.domain.model.entities.OnThisDayGroup
+import com.memorias.app.domain.model.entities.PhotoFilter
+import com.memorias.app.domain.model.enums.SessionSize
+
 data class OnThisDayUiState(
     val status: Status = Status.Loading,
     val groups: List<OnThisDayGroup> = emptyList(),
