@@ -1,4 +1,4 @@
-package com.memorias.app.domain.model.entities
+package com.memorias.app.domain.model
 
 data class PhotoPage(
     val groups: List<OnThisDayGroup>,

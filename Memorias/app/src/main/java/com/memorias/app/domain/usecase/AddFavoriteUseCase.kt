@@ -1,20 +1,20 @@
 package com.memorias.app.domain.usecase
 
-import com.memorias.app.domain.model.entities.Favorite
-import com.memorias.app.domain.model.entities.Photo
+import com.memorias.app.domain.model.Favorite
+import com.memorias.app.domain.model.Photo
 import com.memorias.app.domain.model.enums.SyncStatus
 import com.memorias.app.domain.repository.FavoriteRepository
 import com.memorias.app.domain.repository.PhotoRepository
 import com.memorias.app.domain.result.DomainResult
 import java.util.UUID
 
-class AddFavoriteUseCase @Inject constructor(
+class AddFavoriteUseCase (
     private val favoriteRepository: FavoriteRepository,
     private val photoRepository: PhotoRepository,
 ) {
     suspend operator fun invoke(photo: Photo): DomainResult<Favorite> {
         val hash = photoRepository.computeHash(photo.id).getOrNull()
-            ?: photo.stableFallbackHash   // fallback estable, nunca basado en Uri
+            ?: photo.stableFallbackHash
 
         if (favoriteRepository.isFavorite(hash)) {
             return DomainResult.Error.Unknown(

@@ -1,4 +1,4 @@
-package com.memorias.app.presentation.component.StatusIndicators
+package com.memorias.app.presentation.component.statusindicatos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.memorias.app.ui.theme.Siena
+import com.memorias.app.presentation.theme.Siena
 
 @Composable
 private fun EmptyStateIllustration() {

@@ -1,4 +1,4 @@
-package com.memorias.app.presentation.component.StatusIndicators
+package com.memorias.app.presentation.component.statusindicatos
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.memorias.app.ui.theme.BrownMid
-import com.memorias.app.ui.theme.CharcoalWarm
+import com.memorias.app.presentation.theme.BrownMid
+import com.memorias.app.presentation.theme.CharcoalWarm
 
 @Composable
 fun EmptyState(

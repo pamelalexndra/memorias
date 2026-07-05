@@ -1,8 +1,9 @@
 package com.memorias.app.domain.repository
 
-import com.memorias.app.domain.model.entities.Favorite
-import com.memorias.app.domain.model.entities.ReviewSession
-import com.memorias.app.domain.model.entities.SessionStats
+import com.memorias.app.domain.model.Favorite
+import com.memorias.app.domain.model.ReviewSession
+import com.memorias.app.domain.model.SessionStats
+import com.memorias.app.domain.result.DomainResult
 
 interface SyncRepository {
     suspend fun syncFavorites(favorites: List<Favorite>): DomainResult<Unit>

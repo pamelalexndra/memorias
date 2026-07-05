@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.memorias.app.presentation.component.StatusIndicators.shimmerEffect
+import com.memorias.app.presentation.component.statusindicatos.shimmerEffect
 
 @Composable
 fun OnThisDayShimmer(modifier: Modifier = Modifier) {

@@ -18,11 +18,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.extension.formatBytes
-import com.memorias.app.ui.theme.BrownMid
-import com.memorias.app.ui.theme.CharcoalWarm
-import com.memorias.app.ui.theme.SwipeDelete
-import com.memorias.app.ui.theme.SwipeFav
-import com.memorias.app.ui.theme.SwipeKeep
+import com.memorias.app.presentation.theme.BrownMid
+import com.memorias.app.presentation.theme.CharcoalWarm
+import com.memorias.app.presentation.theme.SwipeDelete
+import com.memorias.app.presentation.theme.SwipeFav
+import com.memorias.app.presentation.theme.SwipeKeep
 
 @Composable
 fun SessionSummaryDialog(

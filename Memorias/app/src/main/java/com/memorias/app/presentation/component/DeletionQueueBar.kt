@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.memorias.app.presentation.extension.formatBytes
-import com.memorias.app.ui.theme.SwipeDelete
+import com.memorias.app.presentation.theme.SwipeDelete
 
 
 @Composable

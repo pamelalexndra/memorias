@@ -1,6 +1,7 @@
 package com.memorias.app.domain.repository
 
-import com.memorias.app.domain.model.entities.Favorite
+import com.memorias.app.domain.model.Favorite
+import com.memorias.app.domain.result.DomainResult
 import kotlinx.coroutines.flow.Flow
 
 interface FavoriteRepository {

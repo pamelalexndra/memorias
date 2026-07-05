@@ -1,4 +1,6 @@
-package com.memorias.app.domain.model.entities
+package com.memorias.app.domain.model
+
+import com.memorias.app.domain.model.enums.SwipeAction
 
 data class SessionAction(
     val photo: Photo,

@@ -2,6 +2,8 @@ package com.memorias.app.core.factory
 
 import android.content.Context
 import com.memorias.app.core.di.AppContainer
+import com.memorias.app.worker.SyncWorker
+import com.memorias.worker.WidgetRefreshWorker
 
 class MemoriasWorkerFactory(
     private val container: AppContainer,

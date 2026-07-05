@@ -2,9 +2,10 @@ package com.memorias.app.domain.repository
 
 
 import android.app.PendingIntent
-import com.memorias.app.domain.model.entities.PhotoFilter
-import com.memorias.app.domain.model.entities.PhotoPage
+import com.memorias.app.domain.model.PhotoFilter
+import com.memorias.app.domain.model.PhotoPage
 import com.memorias.app.domain.model.*
+import com.memorias.app.domain.result.DomainResult
 
 interface PhotoRepository {
 

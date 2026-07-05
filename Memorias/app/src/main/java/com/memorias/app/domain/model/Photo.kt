@@ -1,4 +1,4 @@
-package com.memorias.app.domain.model.entities
+package com.memorias.app.domain.model
 
 import java.time.Instant
 import java.time.LocalDate

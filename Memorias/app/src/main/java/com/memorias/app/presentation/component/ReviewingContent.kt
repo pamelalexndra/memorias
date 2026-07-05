@@ -26,10 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.memorias.app.domain.model.enums.SwipeAction
 import com.memorias.app.presentation.screen.onthisday.OnThisDayUiState
-import com.memorias.app.ui.theme.BrownLight
-import com.memorias.app.ui.theme.BrownMid
-import com.memorias.app.ui.theme.Siena
-import com.memorias.app.ui.theme.SwipeFav
+import com.memorias.app.presentation.theme.BrownLight
+import com.memorias.app.presentation.theme.BrownMid
+import com.memorias.app.presentation.theme.Siena
+import com.memorias.app.presentation.theme.SwipeFav
 
 @Composable
 fun ReviewingContent(

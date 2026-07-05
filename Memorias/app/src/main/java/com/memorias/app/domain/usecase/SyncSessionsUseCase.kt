@@ -4,7 +4,7 @@ import com.memorias.app.domain.repository.SessionRepository
 import com.memorias.app.domain.repository.SyncRepository
 import com.memorias.app.domain.result.DomainResult
 
-class SyncSessionsUseCase @Inject constructor(
+class SyncSessionsUseCase (
     private val sessionRepository: SessionRepository,
     private val syncRepository: SyncRepository,
 ) {

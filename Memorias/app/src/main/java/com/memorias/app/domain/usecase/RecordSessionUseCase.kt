@@ -1,6 +1,6 @@
 package com.memorias.app.domain.usecase
 
-import com.memorias.app.domain.model.entities.ReviewSession
+import com.memorias.app.domain.model.ReviewSession
 import com.memorias.app.domain.model.enums.SyncStatus
 import com.memorias.app.domain.repository.SessionRepository
 import com.memorias.app.domain.result.DomainResult
@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-class RecordSessionUseCase @Inject constructor(
+class RecordSessionUseCase (
     private val sessionRepository: SessionRepository,
 ) {
     suspend operator fun invoke(

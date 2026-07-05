@@ -1,5 +1,10 @@
 package com.memorias.app.domain.repository
 
+import com.memorias.app.domain.model.ReviewSession
+import com.memorias.app.domain.model.SessionStats
+import com.memorias.app.domain.result.DomainResult
+import kotlinx.coroutines.flow.Flow
+
 interface SessionRepository {
 
     suspend fun save(session: ReviewSession): DomainResult<Unit>

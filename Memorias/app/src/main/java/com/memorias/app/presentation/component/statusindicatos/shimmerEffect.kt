@@ -1,4 +1,4 @@
-package com.memorias.app.presentation.component.StatusIndicators
+package com.memorias.app.presentation.component.statusindicatos
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import com.memorias.app.ui.theme.ShimmerBase
-import com.memorias.app.ui.theme.ShimmerHighlight
+import com.memorias.app.presentation.theme.ShimmerBase
+import com.memorias.app.presentation.theme.ShimmerHighlight
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp

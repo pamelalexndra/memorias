@@ -28,9 +28,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.memorias.app.domain.model.enums.DragOutcome
 import com.memorias.app.domain.model.enums.SwipeAction
-import com.memorias.app.ui.theme.SwipeDelete
-import com.memorias.app.ui.theme.SwipeFav
-import com.memorias.app.ui.theme.SwipeKeep
+import com.memorias.app.presentation.theme.SwipeDelete
+import com.memorias.app.presentation.theme.SwipeFav
+import com.memorias.app.presentation.theme.SwipeKeep
 import kotlinx.coroutines.launch
 
 @Composable

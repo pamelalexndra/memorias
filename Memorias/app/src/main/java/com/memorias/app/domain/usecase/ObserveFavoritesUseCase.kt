@@ -1,10 +1,11 @@
 package com.memorias.app.domain.usecase
 
+import com.memorias.app.domain.model.Favorite
 import com.memorias.app.domain.repository.FavoriteRepository
 import com.memorias.app.domain.result.DomainResult
 import kotlinx.coroutines.flow.Flow
 
-class ObserveFavoritesUseCase @Inject constructor(
+class ObserveFavoritesUseCase (
     private val favoriteRepository: FavoriteRepository,
 ) {
     operator fun invoke(): Flow<DomainResult<List<Favorite>>> = favoriteRepository.observeAll()

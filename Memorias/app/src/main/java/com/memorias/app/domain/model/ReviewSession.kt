@@ -1,5 +1,6 @@
-package com.memorias.app.domain.model.entities
+package com.memorias.app.domain.model
 
+import com.memorias.app.domain.model.enums.SyncStatus
 import java.time.Instant
 import java.time.LocalDate
 

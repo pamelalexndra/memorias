@@ -5,7 +5,7 @@ import com.memorias.app.domain.model.enums.DeletionMode
 import com.memorias.app.domain.model.enums.SessionSize
 import com.memorias.app.domain.repository.PreferencesRepository
 
-class UpdatePreferencesUseCase @Inject constructor(
+class UpdatePreferencesUseCase (
     private val preferencesRepository: PreferencesRepository,
 ) {
     suspend fun setDeletionMode(mode: DeletionMode) = preferencesRepository.setDeletionMode(mode)

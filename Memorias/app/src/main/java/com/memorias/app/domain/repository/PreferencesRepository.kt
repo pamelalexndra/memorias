@@ -1,6 +1,6 @@
 package com.memorias.app.domain.repository
 
-import com.memorias.app.domain.model.entities.UserPreferences
+import com.memorias.app.domain.model.UserPreferences
 import com.memorias.app.domain.model.enums.AppTheme
 import com.memorias.app.domain.model.enums.DeletionMode
 import com.memorias.app.domain.model.enums.SessionSize

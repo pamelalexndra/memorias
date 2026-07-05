@@ -1,12 +1,12 @@
 package com.memorias.app.domain.usecase
 
-import com.memorias.app.domain.model.entities.DeletionQueue
+import com.memorias.app.domain.model.DeletionQueue
 import com.memorias.app.domain.model.enums.DeletionMode
 import com.memorias.app.domain.repository.PhotoRepository
 import com.memorias.app.domain.repository.PreferencesRepository
 import com.memorias.app.domain.result.DomainResult
 
-class ExecuteDeletionUseCase @Inject constructor(
+class ExecuteDeletionUseCase (
     private val photoRepository: PhotoRepository,
     private val preferencesRepository: PreferencesRepository,
 ) {

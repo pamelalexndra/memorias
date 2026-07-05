@@ -1,12 +1,12 @@
 package com.memorias.app.domain.usecase
 
-import com.memorias.app.domain.model.entities.PhotoFilter
-import com.memorias.app.domain.model.entities.PhotoPage
+import com.memorias.app.domain.model.PhotoFilter
+import com.memorias.app.domain.model.PhotoPage
 import com.memorias.app.domain.repository.PhotoRepository
 import com.memorias.app.domain.result.DomainResult
 
 
-class GetOnThisDayPhotosUseCase @Inject constructor(
+class GetOnThisDayPhotosUseCase (
     private val photoRepository: PhotoRepository,
 ) {
     suspend operator fun invoke(

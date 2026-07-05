@@ -1,4 +1,4 @@
-package com.memorias.app.ui.theme
+package com.memorias.app.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

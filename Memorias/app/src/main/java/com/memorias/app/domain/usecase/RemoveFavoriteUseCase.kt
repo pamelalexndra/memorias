@@ -1,12 +1,12 @@
 package com.memorias.app.domain.usecase
 
-import com.memorias.app.domain.model.entities.Favorite
-import com.memorias.app.domain.model.entities.Photo
+import com.memorias.app.domain.model.Favorite
+import com.memorias.app.domain.model.Photo
 import com.memorias.app.domain.repository.FavoriteRepository
 import com.memorias.app.domain.repository.PhotoRepository
 import com.memorias.app.domain.result.DomainResult
 
-class RemoveFavoriteUseCase @Inject constructor(
+class RemoveFavoriteUseCase (
     private val favoriteRepository: FavoriteRepository,
     private val photoRepository: PhotoRepository,
 ) {

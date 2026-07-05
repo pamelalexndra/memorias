@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.memorias.app.domain.model.entities.OnThisDayGroup
+import com.memorias.app.domain.model.OnThisDayGroup
 
 @Composable
 fun YearTimeline(
