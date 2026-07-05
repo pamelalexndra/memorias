@@ -1,8 +1,11 @@
 package com.memorias.app.core.di
 
 import android.content.Context
+import com.memorias.app.data.repository.AndroidPhotoRepository
 import com.memorias.app.domain.repository.FavoriteRepository
 import com.memorias.app.domain.repository.PhotoRepository
+import com.memorias.app.domain.repository.PreferencesRepository
+import com.memorias.app.domain.repository.SessionRepository
 import com.memorias.app.domain.usecase.AddFavoriteUseCase
 import com.memorias.app.domain.usecase.ExecuteDeletionUseCase
 import com.memorias.app.domain.usecase.GetOnThisDayPhotosUseCase
@@ -37,14 +40,14 @@ class AppContainer(context: Context) {
     }
 
     // reemplazar con AuthRepositoryImpl(apiService, tokenManager)
-    val authRepository: AuthRepository by lazy {
+  /*  val authRepository: AuthRepository by lazy {
         throw NotImplementedError("AuthRepository no implementado.")
     }
 
     // reemplazar con RemoteSyncRepository(apiService, ...)
     val syncRepository: SyncRepository by lazy {
         throw NotImplementedError("SyncRepository no implementado.")
-    }
+    } */
 
     // reemplazar con RoomSessionRepository(sessionDao)
     val sessionRepository: SessionRepository by lazy {
@@ -87,6 +90,6 @@ class AppContainer(context: Context) {
     fun updatePreferencesUseCase() =
         UpdatePreferencesUseCase(preferencesRepository)
 
-    fun loginWithGoogleUseCase() =
-        LoginWithGoogleUseCase(authRepository)
+   // fun loginWithGoogleUseCase() =
+     //   LoginWithGoogleUseCase(authRepository)
 }

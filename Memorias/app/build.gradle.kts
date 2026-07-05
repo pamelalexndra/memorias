@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.memorias.app"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId = "com.memorias.app"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 

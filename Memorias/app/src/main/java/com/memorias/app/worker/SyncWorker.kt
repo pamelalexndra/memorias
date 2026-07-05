@@ -2,6 +2,13 @@ package com.memorias.app.worker
 
 import android.content.Context
 import androidx.compose.ui.unit.Constraints
+import androidx.work.BackoffPolicy
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import com.memorias.app.domain.usecase.SyncFavoritesUseCase
 import com.memorias.app.domain.usecase.SyncSessionsUseCase
 import java.time.Duration
