@@ -1,7 +1,5 @@
 package com.example.pamelapp.ui.screens.deletephotoscreen
 
-package com.example.pamelapp.ui.screens.deletephotoscreen
-
 import android.app.Activity
 import android.os.Build
 import android.provider.MediaStore

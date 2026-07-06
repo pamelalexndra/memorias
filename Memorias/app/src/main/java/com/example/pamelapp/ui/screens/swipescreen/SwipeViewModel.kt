@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.os.Build
+import android.net.Uri
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
@@ -107,10 +108,22 @@ class SwipeViewModel : ViewModel() {
   }
   
   fun onKeep() = advancePhoto()
-  
+
   fun onDelete() {
     val photo = currentPhoto() ?: return
-    _state.update { it.copy(pendingDelete = it.pendingDelete + photo) }
+
+    _state.update { state ->
+      val alreadyQueued = state.pendingDelete.any { it.id == photo.id }
+
+      state.copy(
+        pendingDelete = if (alreadyQueued) {
+          state.pendingDelete
+        } else {
+          state.pendingDelete + photo
+        }
+      )
+    }
+
     advancePhoto()
   }
   
@@ -119,23 +132,124 @@ class SwipeViewModel : ViewModel() {
     toggleFavorite(photo, context)
     advancePhoto()
   }
-  
+
   fun removeFromQueue(photo: Photo) {
-    _state.update { it.copy(pendingDelete = it.pendingDelete - photo) }
-  }
-  
-  fun onDeleteSuccess() {
-    val deleted = _state.value.pendingDelete
-    val freed = deleted.sumOf { it.sizeBytes }
-    _state.update {
-      it.copy(
-        pendingDelete = emptyList(),
-        deletedCount = it.deletedCount + deleted.size,
-        freedBytes = it.freedBytes + freed,
+    _state.update { state ->
+      state.copy(
+        pendingDelete = state.pendingDelete.filterNot { it.id == photo.id }
       )
     }
   }
-  
+
+  fun onDeleteSuccess(context: Context) {
+    val deleted = _state.value.pendingDelete
+    if (deleted.isEmpty()) return
+
+    val deletedIds = deleted.map { it.id }.toSet()
+    val deletedIdsAsString = deletedIds.map { it.toString() }.toSet()
+    val freed = deleted.sumOf { it.sizeBytes }
+
+    removeDeletedPhotosFromFavoritesPrefs(context, deletedIdsAsString)
+
+    _state.update { state ->
+      val remainingPhotos = state.photos.filterNot { it.id in deletedIds }
+      val remainingFavorites = state.favoritePhotos.filterNot { it.id in deletedIds }
+
+      state.copy(
+        photos = remainingPhotos,
+        favoritePhotos = remainingFavorites,
+        favorited = remainingFavorites.size,
+        pendingDelete = emptyList(),
+        deletedCount = state.deletedCount + deleted.size,
+        freedBytes = state.freedBytes + freed,
+        error = null,
+        loading = false
+      )
+    }
+  }
+
+  fun onDeleteCancelled() {
+    _state.update {
+      it.copy(
+        loading = false,
+        error = null
+      )
+    }
+  }
+
+  fun deletePendingDirectly(
+    context: Context,
+    contentResolver: ContentResolver,
+    onComplete: () -> Unit
+  ) {
+    val photosToDelete = _state.value.pendingDelete
+    if (photosToDelete.isEmpty()) return
+
+    viewModelScope.launch {
+      _state.update { it.copy(loading = true, error = null) }
+
+      val successfullyDeleted = withContext(Dispatchers.IO) {
+        photosToDelete.filter { photo ->
+          try {
+            contentResolver.delete(photo.uri, null, null) > 0
+          } catch (exception: Exception) {
+            false
+          }
+        }
+      }
+
+      if (successfullyDeleted.isNotEmpty()) {
+        val deletedIds = successfullyDeleted.map { it.id }.toSet()
+        val deletedIdsAsString = deletedIds.map { it.toString() }.toSet()
+        val freed = successfullyDeleted.sumOf { it.sizeBytes }
+
+        removeDeletedPhotosFromFavoritesPrefs(context, deletedIdsAsString)
+
+        _state.update { state ->
+          val remainingPending = state.pendingDelete.filterNot { it.id in deletedIds }
+          val remainingPhotos = state.photos.filterNot { it.id in deletedIds }
+          val remainingFavorites = state.favoritePhotos.filterNot { it.id in deletedIds }
+
+          state.copy(
+            loading = false,
+            photos = remainingPhotos,
+            favoritePhotos = remainingFavorites,
+            favorited = remainingFavorites.size,
+            pendingDelete = remainingPending,
+            deletedCount = state.deletedCount + successfullyDeleted.size,
+            freedBytes = state.freedBytes + freed,
+            error = null
+          )
+        }
+
+        onComplete()
+      } else {
+        _state.update {
+          it.copy(
+            loading = false,
+            error = "No se pudieron borrar las fotos seleccionadas."
+          )
+        }
+      }
+    }
+  }
+
+  private fun removeDeletedPhotosFromFavoritesPrefs(
+    context: Context,
+    deletedIds: Set<String>
+  ) {
+    val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+    val favoriteIds = prefs.getStringSet(favoritesKey, emptySet())
+      ?.toMutableSet()
+      ?: mutableSetOf()
+
+    favoriteIds.removeAll(deletedIds)
+
+    prefs.edit {
+      putStringSet(favoritesKey, favoriteIds)
+    }
+  }
+
   fun reset() {
     _state.update {
       UiState(
@@ -143,7 +257,7 @@ class SwipeViewModel : ViewModel() {
         photos = it.photos,
         favoritePhotos = it.favoritePhotos,
         favorited = it.favorited,
-        recycleBinMode = it.recycleBinMode
+        deleteMode = it.deleteMode
       )
     }
   }
@@ -151,11 +265,7 @@ class SwipeViewModel : ViewModel() {
   fun setPermissionDenied() {
     _state.update { it.copy(loading = false, permissionDenied = true) }
   }
-  
-  fun setRecycleBinMode(enabled: Boolean) {
-    _state.update { it.copy(recycleBinMode = enabled) }
-  }
-  
+
   fun clearFavorites(context: Context) {
     val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
     prefs.edit { remove(favoritesKey) }
