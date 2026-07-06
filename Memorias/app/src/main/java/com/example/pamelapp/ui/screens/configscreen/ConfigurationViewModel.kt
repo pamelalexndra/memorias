@@ -9,28 +9,39 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ConfigurationViewModel : ViewModel() {
-  private val _deleteMode = MutableStateFlow(DeleteMode.TRASH)
-  val deleteMode = _deleteMode.asStateFlow()
 
   private val prefsKey = "memorias_prefs"
   private val deleteModeKey = "delete_mode"
   private val favoritesKey = "favorites"
   private val showSwipeButtonsKey = "show_swipe_buttons"
 
+  private val _deleteMode = MutableStateFlow(DeleteMode.TRASH)
+  val deleteMode = _deleteMode.asStateFlow()
+
   private val _showSwipeButtons = MutableStateFlow(true)
   val showSwipeButtons = _showSwipeButtons.asStateFlow()
 
   fun loadSettings(context: Context) {
     val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-    val showSwipeButtons = prefs.getBoolean(showSwipeButtonsKey, true)
 
-    val savedMode = when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
+    val savedDeleteMode = when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
       DeleteMode.PERMANENT.name -> DeleteMode.PERMANENT
       else -> DeleteMode.TRASH
     }
 
-    _showSwipeButtons.update { showSwipeButtons }
-    _deleteMode.update { savedMode }
+    val savedShowSwipeButtons = prefs.getBoolean(showSwipeButtonsKey, true)
+
+    _deleteMode.update { savedDeleteMode }
+    _showSwipeButtons.update { savedShowSwipeButtons }
+  }
+
+  fun setDeleteMode(context: Context, mode: DeleteMode) {
+    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+      .edit {
+        putString(deleteModeKey, mode.name)
+      }
+
+    _deleteMode.update { mode }
   }
 
   fun setShowSwipeButtons(context: Context, show: Boolean) {
@@ -41,25 +52,19 @@ class ConfigurationViewModel : ViewModel() {
 
     _showSwipeButtons.update { show }
   }
-  fun setDeleteMode(context: Context, mode: DeleteMode) {
-    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-      .edit {
-        putString(deleteModeKey, mode.name)
-      }
-
-    _deleteMode.update { mode }
-  }
 
   fun clearFavorites(context: Context) {
-    val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-    prefs.edit { remove(favoritesKey) }
+    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+      .edit {
+        remove(favoritesKey)
+      }
   }
 
   fun deleteAccount() {
-    // Implementar lógica de borrado de cuenta
+    // Pendiente: implementar lógica de borrado de cuenta.
   }
 
   fun logout() {
-    // Implementar lógica de cierre de sesión
+    // Pendiente: implementar lógica de cierre de sesión.
   }
 }

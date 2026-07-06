@@ -5,22 +5,28 @@ import androidx.core.content.edit
 import com.example.pamelapp.domain.model.DeleteMode
 
 class SwipePreferences(
-    private val context: Context
+    context: Context
 ) {
     private val prefsKey = "memorias_prefs"
     private val favoritesKey = "favorites"
     private val deleteModeKey = "delete_mode"
     private val showSwipeButtonsKey = "show_swipe_buttons"
-    private val prefs get() = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+
+    private val prefs = context.getSharedPreferences(
+        prefsKey,
+        Context.MODE_PRIVATE
+    )
 
     fun getDeleteMode(): DeleteMode {
         return when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
             DeleteMode.PERMANENT.name -> DeleteMode.PERMANENT
-            else -> DeleteMode.TRASH }
+            else -> DeleteMode.TRASH
+        }
     }
 
     fun setDeleteMode(mode: DeleteMode) {
-        prefs.edit { putString(deleteModeKey, mode.name)
+        prefs.edit {
+            putString(deleteModeKey, mode.name)
         }
     }
 
@@ -39,49 +45,58 @@ class SwipePreferences(
     }
 
     fun setFavoriteIds(favoriteIds: Set<String>) {
-        prefs.edit { putStringSet(favoritesKey, favoriteIds)
+        prefs.edit {
+            putStringSet(favoritesKey, favoriteIds)
         }
-    }
-
-    fun addFavorite(photoId: Long): Set<String> {
-        val favoriteIds = getFavoriteIds().toMutableSet()
-        favoriteIds.add(photoId.toString())
-        setFavoriteIds(favoriteIds)
-        return favoriteIds
-    }
-
-    fun removeFavorite(photoId: Long): Set<String> {
-        val favoriteIds = getFavoriteIds().toMutableSet()
-        favoriteIds.remove(photoId.toString())
-        setFavoriteIds(favoriteIds)
-        return favoriteIds
     }
 
     fun toggleFavorite(photoId: Long): Set<String> {
         val favoriteIds = getFavoriteIds().toMutableSet()
         val photoIdText = photoId.toString()
+
         if (favoriteIds.contains(photoIdText)) {
             favoriteIds.remove(photoIdText)
+        } else {
+            favoriteIds.add(photoIdText)
         }
-        else { favoriteIds.add(photoIdText) }
+
         setFavoriteIds(favoriteIds)
+
         return favoriteIds
     }
 
-    fun restoreFavoriteState( photoId: Long, shouldBeFavorite: Boolean ): Set<String> {
+    fun restoreFavoriteState(
+        photoId: Long,
+        shouldBeFavorite: Boolean
+    ): Set<String> {
         val favoriteIds = getFavoriteIds().toMutableSet()
         val photoIdText = photoId.toString()
-        if (shouldBeFavorite) { favoriteIds.add(photoIdText)
+
+        if (shouldBeFavorite) {
+            favoriteIds.add(photoIdText)
+        } else {
+            favoriteIds.remove(photoIdText)
         }
-        else { favoriteIds.remove(photoIdText) }
+
         setFavoriteIds(favoriteIds)
-        return favoriteIds }
+
+        return favoriteIds
+    }
+
     fun removeFavorites(photoIds: Set<Long>): Set<String> {
         val idsToRemove = photoIds.map { it.toString() }.toSet()
         val favoriteIds = getFavoriteIds().toMutableSet()
+
         favoriteIds.removeAll(idsToRemove)
+
         setFavoriteIds(favoriteIds)
+
         return favoriteIds
     }
 
-    fun clearFavorites() { prefs.edit { remove(favoritesKey) } } }
+    fun clearFavorites() {
+        prefs.edit {
+            remove(favoritesKey)
+        }
+    }
+}

@@ -67,14 +67,14 @@ fun DeletePhotoScreen(
   val totalMb = photos.sumOf { it.sizeBytes } / 1_048_576f
 
   LaunchedEffect(Unit) {
-    viewModel.loadSettings(context)
+    viewModel.loadSettings()
   }
 
   val deleteLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartIntentSenderForResult()
   ) { result ->
     if (result.resultCode == Activity.RESULT_OK) {
-      viewModel.onDeleteSuccess(context)
+      viewModel.onDeleteSuccess()
       navigateToBack()
     } else {
       viewModel.onDeleteCancelled()
@@ -96,7 +96,10 @@ fun DeletePhotoScreen(
         .padding(paddingValues),
     ) {
       Text(
-        text = "Toca una foto para quitarla de la selección",
+        text = if(photos.isNotEmpty()) {
+          "Toca una foto para quitarla  · %.1f MB seleccionados".format(totalMb)
+      } else { "No hay fotos pendientes de eliminar"
+  },
         color = BrownMid,
         fontSize = 12.sp,
         textAlign = TextAlign.Center,
@@ -201,8 +204,6 @@ fun DeletePhotoScreen(
               viewModel.setError("La papelera solo está disponible desde Android 11.")
             } else {
               viewModel.deletePendingDirectly(
-                context = context,
-                contentResolver = context.contentResolver,
                 onComplete = navigateToBack
               )
             }

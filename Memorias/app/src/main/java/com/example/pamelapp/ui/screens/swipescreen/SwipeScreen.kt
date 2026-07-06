@@ -40,7 +40,6 @@ fun SwipeScreen(
 ) {
   val state by viewModel.state.collectAsState()
   val context = LocalContext.current
-  val contentResolver = context.contentResolver
 
   val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
     Manifest.permission.READ_MEDIA_IMAGES
@@ -52,9 +51,9 @@ fun SwipeScreen(
     ActivityResultContracts.RequestPermission()
   ) { granted ->
     if (granted) {
-      viewModel.loadSettings(context)
-      viewModel.loadPhotos(contentResolver)
-      viewModel.loadFavorites(context)
+      viewModel.loadSettings()
+      viewModel.loadPhotos()
+      viewModel.loadFavorites()
     } else {
       viewModel.setPermissionDenied()
     }
@@ -67,9 +66,9 @@ fun SwipeScreen(
     ) == PackageManager.PERMISSION_GRANTED
 
     if (alreadyGranted) {
-      viewModel.loadSettings(context)
-      viewModel.loadPhotos(contentResolver)
-      viewModel.loadFavorites(context)
+      viewModel.loadSettings()
+      viewModel.loadPhotos()
+      viewModel.loadFavorites()
     } else {
       permissionLauncher.launch(permission)
     }
@@ -114,8 +113,8 @@ fun SwipeScreen(
           ErrorState(
             message = state.error ?: "Ocurrió un error",
             onRetry = {
-              viewModel.loadPhotos(contentResolver)
-              viewModel.loadFavorites(context)
+              viewModel.loadPhotos()
+              viewModel.loadFavorites()
             }
           )
         }
@@ -139,9 +138,9 @@ fun SwipeScreen(
             photo = photo,
             showActionButtons = state.showSwipeButtons,
             onKeep = { viewModel.onKeep() },
-            onFavorite = { viewModel.onFavorite(context) },
+            onFavorite = { viewModel.onFavorite() },
             onDelete = { viewModel.onDelete() },
-            onUndoLastAction = { viewModel.undoLastSwipeAction(context) }
+            onUndoLastAction = { viewModel.undoLastSwipeAction() }
           )
         }
       }
