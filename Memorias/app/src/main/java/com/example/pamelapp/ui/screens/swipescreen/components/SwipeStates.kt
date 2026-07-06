@@ -35,7 +35,6 @@ import com.example.pamelapp.ui.theme.SwipeDelete
         Spacer(modifier = Modifier.height(18.dp))
         Text( text = "Buscando tus recuerdos de este día...", color = CharcoalWarm, fontSize = 17.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center )
         Spacer(modifier = Modifier.height(8.dp))
-        Text( text = "Revisando cámara, WhatsApp, screenshots e Instagram.", color = BrownMid, fontSize = 13.sp, textAlign = TextAlign.Center )
     }
 }
 
