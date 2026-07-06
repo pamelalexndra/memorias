@@ -2,6 +2,7 @@ package com.memorias.app.worker
 
 import android.content.Context
 import androidx.work.BackoffPolicy
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -10,8 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.memorias.app.domain.usecase.SyncFavoritesUseCase
 import com.memorias.app.domain.usecase.SyncSessionsUseCase
-import java.time.Duration
-import androidx.work.Constraints
+import java.util.concurrent.TimeUnit
 
 class SyncWorker(
     context: Context,
@@ -33,7 +33,7 @@ class SyncWorker(
         const val WORK_NAME = "memorias_sync"
 
         fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<SyncWorker>(Duration.ofHours(1))
+            val request = PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.HOURS)
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -41,7 +41,7 @@ class SyncWorker(
                 )
                 .setBackoffCriteria(
                     BackoffPolicy.EXPONENTIAL,
-                    Duration.ofMinutes(5),
+                    5, TimeUnit.MINUTES
                 )
                 .build()
 

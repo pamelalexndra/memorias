@@ -1,7 +1,6 @@
 package com.memorias.worker
 
 import android.content.Context
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -9,9 +8,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.memorias.app.widget.FavoritesGlanceWidget
-import java.time.Duration
-
+import com.memorias.app.widget.WidgetUpdater
+import java.util.concurrent.TimeUnit
 class WidgetRefreshWorker(
     context: Context,
     workerParams: WorkerParameters,
@@ -19,18 +17,7 @@ class WidgetRefreshWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val manager = GlanceAppWidgetManager(applicationContext)
-            val glanceIds = manager.getGlanceIds(FavoritesGlanceWidget::class.java)
-
-            if (glanceIds.isEmpty()) {
-                return Result.success()
-            }
-
-            val widget = FavoritesGlanceWidget()
-            glanceIds.forEach { glanceId ->
-                widget.update(applicationContext, glanceId)
-            }
-
+            WidgetUpdater.update(applicationContext)
             Result.success()
         } catch (e: Exception) {
             Result.retry()
@@ -39,10 +26,9 @@ class WidgetRefreshWorker(
 
     companion object {
         const val WORK_NAME = "memorias_widget_refresh"
-        private val REFRESH_INTERVAL = Duration.ofHours(3)
 
         fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(REFRESH_INTERVAL)
+            val request = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(3, TimeUnit.HOURS)
                 .setConstraints(
                     Constraints.Builder()
                         .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
