@@ -21,6 +21,7 @@ import com.example.pamelapp.ui.theme.BrownMid
 @Composable
 fun SwipeContent(
     photo: Photo,
+    showActionButtons: Boolean,
     onKeep: () -> Unit,
     onFavorite: () -> Unit,
     onDelete: () -> Unit,
@@ -55,20 +56,21 @@ fun SwipeContent(
             }
         }
 
-        ActionButtons(
-            onKeep = onKeep,
-            onFavorite = onFavorite,
-            onDelete = onDelete,
-            onUndoLastAction = onUndoLastAction
-        )
+        if (showActionButtons) {
+            ActionButtons(
+                onKeep = onKeep,
+                onFavorite = onFavorite,
+                onDelete = onDelete,
+                onUndoLastAction = onUndoLastAction
+            )
 
-        Text(
-            text = "← conservar   ↑ favorita   borrar →",
-            color = BrownLight,
-            fontSize = 11.sp,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
+            Text(
+                text = "← conservar   ↑ favorita   borrar →",
+                color = BrownLight,
+                fontSize = 11.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
         Text(
             text = "Doble toque para deshacer la última acción",
             color = BrownMid,

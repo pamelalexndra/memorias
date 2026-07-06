@@ -137,6 +137,7 @@ fun SwipeScreen(
         photo != null -> {
           SwipeContent(
             photo = photo,
+            showActionButtons = state.showSwipeButtons,
             onKeep = { viewModel.onKeep() },
             onFavorite = { viewModel.onFavorite(context) },
             onDelete = { viewModel.onDelete() },

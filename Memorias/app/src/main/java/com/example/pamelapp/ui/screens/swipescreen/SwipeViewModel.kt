@@ -32,6 +32,7 @@ class SwipeViewModel : ViewModel() {
   private val prefsKey = "memorias_prefs"
   private val favoritesKey = "favorites"
   private val deleteModeKey = "delete_mode"
+  private val showSwipeButtonsKey = "show_swipe_buttons"
 
   private var cachedFavoriteIds: Set<String> = emptySet()
 
@@ -58,7 +59,25 @@ class SwipeViewModel : ViewModel() {
       else -> DeleteMode.TRASH
     }
 
-    _state.update { it.copy(deleteMode = deleteMode) }
+    val showSwipeButtons = prefs.getBoolean(showSwipeButtonsKey, true)
+
+    _state.update {
+      it.copy(
+        deleteMode = deleteMode,
+        showSwipeButtons = showSwipeButtons
+      )
+    }
+  }
+
+  fun setShowSwipeButtons(context: Context, show: Boolean) {
+    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+      .edit {
+        putBoolean(showSwipeButtonsKey, show)
+      }
+
+    _state.update {
+      it.copy(showSwipeButtons = show)
+    }
   }
 
   fun setDeleteMode(context: Context, mode: DeleteMode) {
@@ -473,7 +492,8 @@ class SwipeViewModel : ViewModel() {
         photos = it.photos,
         favoritePhotos = it.favoritePhotos,
         favorited = it.favorited,
-        deleteMode = it.deleteMode
+        deleteMode = it.deleteMode,
+        showSwipeButtons = it.showSwipeButtons
       )
     }
   }

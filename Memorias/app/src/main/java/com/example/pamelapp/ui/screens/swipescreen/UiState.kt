@@ -17,6 +17,7 @@ data class UiState(
   val freedBytes: Long = 0L,
   val error: String? = null,
   val deleteMode: DeleteMode = DeleteMode.TRASH,
+  val showSwipeButtons: Boolean = true,
 ) {
   val recycleBinMode: Boolean
     get() = deleteMode == DeleteMode.TRASH

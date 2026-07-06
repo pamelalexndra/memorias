@@ -15,18 +15,32 @@ class ConfigurationViewModel : ViewModel() {
   private val prefsKey = "memorias_prefs"
   private val deleteModeKey = "delete_mode"
   private val favoritesKey = "favorites"
+  private val showSwipeButtonsKey = "show_swipe_buttons"
+
+  private val _showSwipeButtons = MutableStateFlow(true)
+  val showSwipeButtons = _showSwipeButtons.asStateFlow()
 
   fun loadSettings(context: Context) {
     val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+    val showSwipeButtons = prefs.getBoolean(showSwipeButtonsKey, true)
 
     val savedMode = when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
       DeleteMode.PERMANENT.name -> DeleteMode.PERMANENT
       else -> DeleteMode.TRASH
     }
 
+    _showSwipeButtons.update { showSwipeButtons }
     _deleteMode.update { savedMode }
   }
 
+  fun setShowSwipeButtons(context: Context, show: Boolean) {
+    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+      .edit {
+        putBoolean(showSwipeButtonsKey, show)
+      }
+
+    _showSwipeButtons.update { show }
+  }
   fun setDeleteMode(context: Context, mode: DeleteMode) {
     context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
       .edit {
