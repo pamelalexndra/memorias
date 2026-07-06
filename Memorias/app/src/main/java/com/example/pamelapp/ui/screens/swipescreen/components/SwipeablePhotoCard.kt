@@ -1,0 +1,185 @@
+package com.example.pamelapp.ui.screens.swipescreen.components
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.example.pamelapp.domain.model.Photo
+import com.example.pamelapp.ui.theme.SwipeDelete
+import com.example.pamelapp.ui.theme.SwipeFav
+import com.example.pamelapp.ui.theme.SwipeKeep
+import kotlinx.coroutines.launch
+
+@Composable
+fun SwipeablePhotoCard(
+    photo: Photo,
+    onKeep: () -> Unit,
+    onDelete: () -> Unit,
+    onFavorite: () -> Unit,
+    onUndoLastAction: () -> Unit,
+) {
+    val offsetX = remember(photo.id) { Animatable(0f) }
+    val offsetY = remember(photo.id) { Animatable(0f) }
+    val threshold = 160f
+    val scope = rememberCoroutineScope()
+
+    val overlayColor = when {
+        offsetX.value > 80f -> SwipeDelete.copy(
+            alpha = (offsetX.value / threshold).coerceIn(0f, 0.5f)
+        )
+
+        offsetX.value < -80f -> SwipeKeep.copy(
+            alpha = ((-offsetX.value) / threshold).coerceIn(0f, 0.5f)
+        )
+
+        offsetY.value < -80f -> SwipeFav.copy(
+            alpha = ((-offsetY.value) / threshold).coerceIn(0f, 0.5f)
+        )
+
+        else -> Color.Transparent
+    }
+
+    val overlayIcon = when {
+        offsetX.value > 80f -> Icons.Default.Delete
+        offsetX.value < -80f -> Icons.Default.Check
+        offsetY.value < -80f -> Icons.Default.Favorite
+        else -> null
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                translationX = offsetX.value
+                translationY = offsetY.value
+                rotationZ = (offsetX.value / 20f).coerceIn(-15f, 15f)
+            }
+            .pointerInput(photo.id) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        onUndoLastAction()
+                    }
+                )
+            }
+            .pointerInput(photo.id) {
+                detectDragGestures(
+                    onDrag = { change, drag ->
+                        change.consume()
+
+                        scope.launch {
+                            offsetX.snapTo(offsetX.value + drag.x)
+                            offsetY.snapTo(offsetY.value + drag.y)
+                        }
+                    },
+                    onDragEnd = {
+                        scope.launch {
+                            when {
+                                offsetX.value > threshold -> {
+                                    offsetX.animateTo(1200f, spring(stiffness = 800f))
+                                    onDelete()
+                                }
+
+                                offsetX.value < -threshold -> {
+                                    offsetX.animateTo(-1200f, spring(stiffness = 800f))
+                                    onKeep()
+                                }
+
+                                offsetY.value < -threshold -> {
+                                    offsetY.animateTo(-1200f, spring(stiffness = 800f))
+                                    onFavorite()
+                                }
+
+                                else -> {
+                                    launch { offsetX.animateTo(0f, spring(stiffness = 400f)) }
+                                    launch { offsetY.animateTo(0f, spring(stiffness = 400f)) }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+            .clip(RoundedCornerShape(20.dp)),
+    ) {
+        AsyncImage(
+            model = photo.uri,
+            contentDescription = photo.displayName,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(overlayColor)
+        )
+
+        overlayIcon?.let { icon ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.9f),
+                    modifier = Modifier.size(72.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = when {
+                            offsetX.value > 80f -> SwipeDelete
+                            offsetX.value < -80f -> SwipeKeep
+                            else -> SwipeFav
+                        },
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxSize(),
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(12.dp)
+                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+        ) {
+            Text(
+                text = "${photo.year}",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
