@@ -53,10 +53,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.example.pamelapp.data.Photo
+import com.example.pamelapp.domain.model.Photo
 import com.example.pamelapp.ui.scaffold.AppScaffold
 import com.example.pamelapp.ui.theme.*
-
+/*
 @Composable
 fun FavoritesScreen(
   navigateToBack: () -> Unit,
@@ -237,4 +237,4 @@ fun FavoritesScreen(
       }
     }
   }
-}
+}*/

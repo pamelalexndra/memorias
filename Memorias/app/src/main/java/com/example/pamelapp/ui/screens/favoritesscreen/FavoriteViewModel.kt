@@ -1,5 +1,5 @@
 package com.example.pamelapp.ui.screens.favoritesscreen
-
+/*
 import android.content.ContentResolver
 import android.content.Context
 import android.os.Build
@@ -64,4 +64,4 @@ class FavoriteViewModel : ViewModel() {
   fun onDeleteSuccess(deletedPhotos: List<Photo>) {
     _favorites.update { current -> current.filterNot { deletedPhotos.contains(it) } }
   }
-}
+}*/
