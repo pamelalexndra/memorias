@@ -9,7 +9,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pamelapp.data.Photo
+import com.example.pamelapp.domain.model.DeleteMode
+import com.example.pamelapp.domain.model.Photo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,31 @@ class SwipeViewModel : ViewModel() {
   
   private val prefsKey = "memorias_prefs"
   private val favoritesKey = "favorites"
+  private val deleteModeKey = "delete_mode"
+
+  fun loadSettings(context: Context) {
+    val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+
+    val deleteMode = when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
+      DeleteMode.PERMANENT.name -> DeleteMode.PERMANENT
+      else -> DeleteMode.TRASH
+    }
+
+    _state.update { it.copy(deleteMode = deleteMode) }
+  }
+
+  fun setDeleteMode(context: Context, mode: DeleteMode) {
+    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
+      .edit {
+        putString(deleteModeKey, mode.name)
+      }
+
+    _state.update { it.copy(deleteMode = mode) }
+  }
+
+  fun setError(message: String) {
+    _state.update { it.copy(loading = false, error = message) }
+  }
   
   @RequiresApi(Build.VERSION_CODES.O)
   fun loadPhotos(contentResolver: ContentResolver) {
@@ -161,12 +187,15 @@ class SwipeViewModel : ViewModel() {
       val thisMonth = today.monthValue
       val thisDay = today.dayOfMonth
       val thisYear = today.year
-      
+
       val projection = arrayOf(
         MediaStore.Images.Media._ID,
         MediaStore.Images.Media.DISPLAY_NAME,
         MediaStore.Images.Media.DATE_TAKEN,
         MediaStore.Images.Media.SIZE,
+        MediaStore.Images.Media.MIME_TYPE,
+        MediaStore.Images.Media.WIDTH,
+        MediaStore.Images.Media.HEIGHT,
       )
       
       val results = mutableListOf<Photo>()
@@ -182,11 +211,15 @@ class SwipeViewModel : ViewModel() {
         val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
         val dateCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
         val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
+        val mimeCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE)
+        val widthCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
+        val heightCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
         
         while (cursor.moveToNext()) {
-          val dateTaken = cursor.getLong(dateCol)
-          val local = Instant.ofEpochMilli(dateTaken).atZone(ZoneId.systemDefault()).toLocalDate()
-          
+          val dateTakenMillis = cursor.getLong(dateCol)
+          val dateTaken = Instant.ofEpochMilli(dateTakenMillis)
+          val local = dateTaken.atZone(ZoneId.systemDefault()).toLocalDate()
+
           if (local.monthValue != thisMonth) continue
           if (local.dayOfMonth != thisDay) continue
           if (local.year >= thisYear) continue
@@ -199,8 +232,13 @@ class SwipeViewModel : ViewModel() {
               uri = uri,
               dateTaken = dateTaken,
               year = local.year,
+              month = local.monthValue,
+              day = local.dayOfMonth,
               sizeBytes = cursor.getLong(sizeCol),
               displayName = cursor.getString(nameCol) ?: "foto",
+              mimeType = cursor.getString(mimeCol) ?: "image/*",
+              width = if (cursor.isNull(widthCol)) 0 else cursor.getInt(widthCol),
+              height = if (cursor.isNull(heightCol)) 0 else cursor.getInt(heightCol),
             )
           )
         }

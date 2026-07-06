@@ -47,20 +47,27 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pamelapp.ui.scaffold.AppScaffold
 import com.example.pamelapp.ui.theme.*
+import androidx.compose.runtime.LaunchedEffect
+import com.example.pamelapp.domain.model.DeleteMode
 
 @Composable
 fun ConfigurationScreen(
   navigateToBack: () -> Unit,
   viewModel: ConfigurationViewModel = viewModel()
 ) {
-  
-  val recycleBinMode by viewModel.recycleBinMode.collectAsState()
+
+  val deleteMode by viewModel.deleteMode.collectAsState()
+  val recycleBinMode = deleteMode == DeleteMode.TRASH
   val context = LocalContext.current
   
   var showClearFavoritesDialog by remember { mutableStateOf(false) }
   var showDeleteAccountDialog by remember { mutableStateOf(false) }
   var showLogoutDialog by remember { mutableStateOf(false) }
-  
+
+  LaunchedEffect(Unit) {
+    viewModel.loadSettings(context)
+  }
+
   AppScaffold(
     title = "Configuración",
     navigationIcon = {
@@ -96,12 +103,12 @@ fun ConfigurationScreen(
               verticalAlignment = Alignment.CenterVertically,
               modifier = Modifier
                 .fillMaxWidth()
-                .clickable { viewModel.setRecycleBinMode(true) }
+                .clickable { viewModel.setDeleteMode(context, DeleteMode.TRASH) }
                 .padding(vertical = 8.dp)
             ) {
               RadioButton(
                 selected = recycleBinMode,
-                onClick = { viewModel.setRecycleBinMode(true) },
+                onClick = { viewModel.setDeleteMode(context, DeleteMode.TRASH) },
                 colors = RadioButtonDefaults.colors(selectedColor = SwipeKeep)
               )
               Spacer(Modifier.width(12.dp))
@@ -126,12 +133,12 @@ fun ConfigurationScreen(
               verticalAlignment = Alignment.CenterVertically,
               modifier = Modifier
                 .fillMaxWidth()
-                .clickable { viewModel.setRecycleBinMode(false) }
+                .clickable { viewModel.setDeleteMode(context, DeleteMode.PERMANENT) }
                 .padding(vertical = 8.dp)
             ) {
               RadioButton(
                 selected = !recycleBinMode,
-                onClick = { viewModel.setRecycleBinMode(false) },
+                onClick = { viewModel.setDeleteMode(context, DeleteMode.PERMANENT) },
                 colors = RadioButtonDefaults.colors(selectedColor = SwipeDelete)
               )
               Spacer(Modifier.width(12.dp))
@@ -167,15 +174,14 @@ fun ConfigurationScreen(
               color = CharcoalWarm
             )
             Spacer(Modifier.height(8.dp))
-            
             SettingsOption(
               icon = Icons.Default.Favorite,
-              title = "Borrar todas las favoritas",
-              subtitle = "Eliminará todas las fotos marcadas como favoritas",
+              title = "Quitar todas las favoritas",
+              subtitle = "Las fotos seguirán en tu teléfono, solo se quitará la marca de favorita",
               iconColor = SwipeFav,
               onClick = { showClearFavoritesDialog = true }
             )
-            
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             SettingsOption(
@@ -200,19 +206,13 @@ fun ConfigurationScreen(
       }
     }
   }
-  
+
   if (showClearFavoritesDialog) {
     AlertDialog(
       onDismissRequest = { showClearFavoritesDialog = false },
-      title = { Text("Borrar favoritas") },
+      title = { Text("Quitar favoritas") },
       text = {
-        Text(
-          if (recycleBinMode) {
-            "¿Estás seguro de que quieres enviar todas las fotos favoritas a la papelera?"
-          } else {
-            "¿Estás seguro de que quieres borrar permanentemente todas las fotos favoritas? Esta acción no se puede deshacer."
-          }
-        )
+        Text("¿Quieres quitar la marca de favorita de todas las fotos guardadas en la app? Las fotos no se eliminarán del teléfono.")
       },
       confirmButton = {
         TextButton(
@@ -221,10 +221,7 @@ fun ConfigurationScreen(
             showClearFavoritesDialog = false
           }
         ) {
-          Text(
-            if (recycleBinMode) "Enviar a papelera" else "Borrar permanentemente",
-            color = if (recycleBinMode) SwipeKeep else SwipeDelete
-          )
+          Text("Quitar favoritas", color = SwipeFav)
         }
       },
       dismissButton = {

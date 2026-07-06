@@ -1,11 +1,13 @@
 package com.example.pamelapp.ui.screens.deletephotoscreen
 
+package com.example.pamelapp.ui.screens.deletephotoscreen
+
+import android.app.Activity
 import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,32 +49,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.example.pamelapp.data.Photo
+import com.example.pamelapp.domain.model.DeleteMode
 import com.example.pamelapp.ui.scaffold.AppScaffold
-import com.example.pamelapp.ui.theme.*
+import com.example.pamelapp.ui.screens.swipescreen.SwipeViewModel
+import com.example.pamelapp.ui.theme.BrownMid
+import com.example.pamelapp.ui.theme.CreamWarm
+import com.example.pamelapp.ui.theme.SwipeDelete
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun DeletePhotoScreen(
   navigateToBack: () -> Unit,
-  viewModel: DeletePhotoViewModel = viewModel()
+  viewModel: SwipeViewModel
 ) {
-  
-  val photos by viewModel.pendingDelete.collectAsState()
+  val state by viewModel.state.collectAsState()
+  val photos = state.pendingDelete
+  val deleteMode = state.deleteMode
   val context = LocalContext.current
   val totalMb = photos.sumOf { it.sizeBytes } / 1_048_576f
-  
+
+  LaunchedEffect(Unit) {
+    viewModel.loadSettings(context)
+  }
+
   val deleteLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartIntentSenderForResult()
   ) { result ->
-    if (result.resultCode == android.app.Activity.RESULT_OK) {
-      viewModel.onDeleteConfirmed()
+    if (result.resultCode == Activity.RESULT_OK) {
+      viewModel.onDeleteSuccess(context)
       navigateToBack()
+    } else {
+      viewModel.onDeleteCancelled()
     }
   }
-  
+
   AppScaffold(
     title = "Confirmar eliminación",
     navigationIcon = {
@@ -95,7 +106,7 @@ fun DeletePhotoScreen(
           .fillMaxWidth()
           .padding(vertical = 10.dp),
       )
-      
+
       LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier
@@ -154,13 +165,50 @@ fun DeletePhotoScreen(
           }
         }
       }
-      
+
       Spacer(Modifier.height(12.dp))
       Button(
         onClick = {
-          val uris = photos.map { it.uri }
-          val pendingIntent = MediaStore.createDeleteRequest(context.contentResolver, uris)
-          deleteLauncher.launch(IntentSenderRequest.Builder(pendingIntent.intentSender).build())
+          if (photos.isEmpty()) return@Button
+
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+              val uris = photos.map { it.uri }
+
+              val pendingIntent = when (deleteMode) {
+                DeleteMode.TRASH -> {
+                  MediaStore.createTrashRequest(
+                    context.contentResolver,
+                    uris,
+                    true
+                  )
+                }
+
+                DeleteMode.PERMANENT -> {
+                  MediaStore.createDeleteRequest(
+                    context.contentResolver,
+                    uris
+                  )
+                }
+              }
+
+              deleteLauncher.launch(
+                IntentSenderRequest.Builder(pendingIntent.intentSender).build()
+              )
+            } catch (exception: Exception) {
+              viewModel.setError("No se pudo iniciar la eliminación. Inténtalo de nuevo.")
+            }
+          } else {
+            if (deleteMode == DeleteMode.TRASH) {
+              viewModel.setError("La papelera solo está disponible desde Android 11.")
+            } else {
+              viewModel.deletePendingDirectly(
+                context = context,
+                contentResolver = context.contentResolver,
+                onComplete = navigateToBack
+              )
+            }
+          }
         },
         colors = ButtonDefaults.buttonColors(containerColor = SwipeDelete),
         modifier = Modifier
@@ -175,9 +223,15 @@ fun DeletePhotoScreen(
           contentDescription = null,
           modifier = Modifier.size(20.dp)
         )
+
         Spacer(Modifier.width(8.dp))
+
         Text(
-          "Eliminar ${photos.size} foto${if (photos.size != 1) "s" else ""}",
+          if (deleteMode == DeleteMode.TRASH) {
+            "Enviar ${photos.size} foto${if (photos.size != 1) "s" else ""} a papelera"
+          } else {
+            "Borrar ${photos.size} foto${if (photos.size != 1) "s" else ""} permanentemente"
+          },
           fontWeight = FontWeight.Bold,
           fontSize = 15.sp
         )

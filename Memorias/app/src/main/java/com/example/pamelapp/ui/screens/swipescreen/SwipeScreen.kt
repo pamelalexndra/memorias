@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
-import com.example.pamelapp.data.Photo
+import com.example.pamelapp.domain.model.Photo
 import com.example.pamelapp.ui.scaffold.AppScaffold
 import com.example.pamelapp.ui.theme.*
 import kotlinx.coroutines.launch
