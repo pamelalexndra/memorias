@@ -32,13 +32,7 @@ fun SwipeContent(
     modifier = Modifier.fillMaxSize(),
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Text(
-      text = "Hace ${photo.yearsAgo} año${if (photo.yearsAgo != 1) "s" else ""} · ${photo.year}",
-      color = BrownMid,
-      fontSize = 13.sp,
-      modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
-    )
-    
+
     Box(
       modifier = Modifier
         .weight(1f)

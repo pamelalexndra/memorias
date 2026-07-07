@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.pamelapp.widget.FavoriteMemoryWidgetProvider
 
-class FavoritePhotoViewModel(private val favoritePhotoRepository: FavoritePhotoRepository) :
-  ViewModel() {
+class FavoritePhotoViewModel(
+  private val favoritePhotoRepository: FavoritePhotoRepository,
+  private val app: MemoriasApplication
+) : ViewModel() {
   
   val favoritePhotos: StateFlow<List<Photo>> = favoritePhotoRepository.getFavoritePhotos()
     .stateIn(
@@ -35,18 +38,21 @@ class FavoritePhotoViewModel(private val favoritePhotoRepository: FavoritePhotoR
   fun addFavoritePhoto(favoritePhoto: Photo) {
     viewModelScope.launch {
       favoritePhotoRepository.addFavoritePhoto(favoritePhoto)
+      FavoriteMemoryWidgetProvider.updateAllWidgets(app.applicationContext)
     }
   }
   
   fun deleteFavoritePhoto(favoritePhoto: Photo) {
     viewModelScope.launch {
       favoritePhotoRepository.removeFavoritePhoto(favoritePhoto)
+      FavoriteMemoryWidgetProvider.updateAllWidgets(app.applicationContext)
     }
   }
   
   fun clearFavoritePhotos() {
     viewModelScope.launch {
       favoritePhotoRepository.removeFavoritePhotos()
+      FavoriteMemoryWidgetProvider.updateAllWidgets(app.applicationContext)
     }
   }
   
@@ -54,7 +60,10 @@ class FavoritePhotoViewModel(private val favoritePhotoRepository: FavoritePhotoR
     fun provideFactory() = viewModelFactory {
       initializer {
         val app = this[APPLICATION_KEY] as MemoriasApplication
-        FavoritePhotoViewModel(app.appProvider.provideFavoritePhotoRepository())
+        FavoritePhotoViewModel(
+          favoritePhotoRepository = app.appProvider.provideFavoritePhotoRepository(),
+          app = app
+        )
       }
     }
   }

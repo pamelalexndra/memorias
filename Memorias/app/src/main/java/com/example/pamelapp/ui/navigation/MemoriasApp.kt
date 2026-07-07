@@ -16,7 +16,9 @@ import com.example.pamelapp.ui.screens.swipescreen.SwipeViewModel
 import com.example.pamelapp.ui.screens.welcomescreen.WelcomeScreen
 
 @Composable
-fun MemoriasApp() {
+fun MemoriasApp(
+  initialRoute: Routes = Routes.Welcome
+) {
   val swipeViewModel: SwipeViewModel = viewModel()
   val backStack = rememberNavBackStack(Routes.Welcome)
 

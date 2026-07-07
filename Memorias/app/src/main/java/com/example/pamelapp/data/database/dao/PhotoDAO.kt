@@ -21,4 +21,8 @@ interface PhotoDAO {
   
   @Query("DELETE FROM favorite_photo")
   suspend fun clearFavoritePhotos()
+
+  @Query("SELECT * FROM favorite_photo")
+  suspend fun getFavoritePhotosOnce(): List<FavoritePhotoEntity>
+
 }

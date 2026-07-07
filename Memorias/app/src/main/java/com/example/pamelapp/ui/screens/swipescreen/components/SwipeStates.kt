@@ -37,7 +37,7 @@ fun LoadingState() {
     CircularProgressIndicator(color = Siena)
     Spacer(modifier = Modifier.height(18.dp))
     Text(
-      text = "Buscando tus recuerdos de este día...",
+      text = "Buscando tus recuerdos de hoy...",
       color = CharcoalWarm,
       fontSize = 17.sp,
       fontWeight = FontWeight.Bold,
