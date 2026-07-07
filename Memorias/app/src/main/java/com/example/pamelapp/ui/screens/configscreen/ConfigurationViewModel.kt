@@ -1,18 +1,20 @@
 package com.example.pamelapp.ui.screens.configscreen
 
-import android.content.Context
-import androidx.core.content.edit
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.example.pamelapp.data.preferences.SwipePreferences
 import com.example.pamelapp.domain.model.DeleteMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class ConfigurationViewModel : ViewModel() {
+class ConfigurationViewModel(
+  application: Application
+) : AndroidViewModel(application) {
 
-  private val prefsKey = "memorias_prefs"
-  private val deleteModeKey = "delete_mode"
-  private val showSwipeButtonsKey = "show_swipe_buttons"
+  private val preferences = SwipePreferences(
+    application.applicationContext
+  )
 
   private val _deleteMode = MutableStateFlow(DeleteMode.TRASH)
   val deleteMode = _deleteMode.asStateFlow()
@@ -20,42 +22,37 @@ class ConfigurationViewModel : ViewModel() {
   private val _showSwipeButtons = MutableStateFlow(true)
   val showSwipeButtons = _showSwipeButtons.asStateFlow()
 
-  fun loadSettings(context: Context) {
-    val prefs = context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-
-    val savedDeleteMode = when (prefs.getString(deleteModeKey, DeleteMode.TRASH.name)) {
-      DeleteMode.PERMANENT.name -> DeleteMode.PERMANENT
-      else -> DeleteMode.TRASH
+  fun loadSettings() {
+    _deleteMode.update {
+      preferences.getDeleteMode()
     }
 
-    val savedShowSwipeButtons = prefs.getBoolean(showSwipeButtonsKey, true)
-
-    _deleteMode.update { savedDeleteMode }
-    _showSwipeButtons.update { savedShowSwipeButtons }
+    _showSwipeButtons.update {
+      preferences.getShowSwipeButtons()
+    }
   }
 
-  fun setDeleteMode(context: Context, mode: DeleteMode) {
-    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-      .edit {
-        putString(deleteModeKey, mode.name)
-      }
+  fun setDeleteMode(mode: DeleteMode) {
+    preferences.setDeleteMode(mode)
 
-    _deleteMode.update { mode }
+    _deleteMode.update {
+      mode
+    }
   }
 
-  fun setShowSwipeButtons(context: Context, show: Boolean) {
-    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-      .edit {
-        putBoolean(showSwipeButtonsKey, show)
-      }
+  fun setShowSwipeButtons(show: Boolean) {
+    preferences.setShowSwipeButtons(show)
 
-    _showSwipeButtons.update { show }
+    _showSwipeButtons.update {
+      show
+    }
   }
+
   fun deleteAccount() {
-    // Pendiente: implementar lógica de borrado de cuenta.
+    // Pendiente
   }
 
   fun logout() {
-    // Pendiente: implementar lógica de cierre de sesión.
+    // Pendiente
   }
 }

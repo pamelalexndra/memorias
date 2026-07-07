@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,14 +70,13 @@ fun ConfigurationScreen(
   val showSwipeButtons by viewModel.showSwipeButtons.collectAsState()
   val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
   val recycleBinMode = deleteMode == DeleteMode.TRASH
-  val context = LocalContext.current
 
   var showClearFavoritesDialog by remember { mutableStateOf(false) }
   var showDeleteAccountDialog by remember { mutableStateOf(false) }
   var showLogoutDialog by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) {
-    viewModel.loadSettings(context)
+    viewModel.loadSettings()
   }
 
   AppScaffold(
@@ -122,14 +120,14 @@ fun ConfigurationScreen(
               modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                  viewModel.setDeleteMode(context, DeleteMode.TRASH)
+                  viewModel.setDeleteMode(DeleteMode.TRASH)
                 }
                 .padding(vertical = 8.dp)
             ) {
               RadioButton(
                 selected = recycleBinMode,
                 onClick = {
-                  viewModel.setDeleteMode(context, DeleteMode.TRASH)
+                  viewModel.setDeleteMode(DeleteMode.TRASH)
                 },
                 colors = RadioButtonDefaults.colors(selectedColor = SwipeKeep)
               )
@@ -159,14 +157,14 @@ fun ConfigurationScreen(
               modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                  viewModel.setDeleteMode(context, DeleteMode.PERMANENT)
+                  viewModel.setDeleteMode(DeleteMode.PERMANENT)
                 }
                 .padding(vertical = 8.dp)
             ) {
               RadioButton(
                 selected = !recycleBinMode,
                 onClick = {
-                  viewModel.setDeleteMode(context, DeleteMode.PERMANENT)
+                  viewModel.setDeleteMode(DeleteMode.PERMANENT)
                 },
                 colors = RadioButtonDefaults.colors(selectedColor = SwipeDelete)
               )
@@ -182,7 +180,7 @@ fun ConfigurationScreen(
                 )
 
                 Text(
-                  text = "⚠️ Las fotos se eliminarán definitivamente sin posibilidad de recuperación.",
+                  text = "Las fotos se eliminarán definitivamente sin posibilidad de recuperación.",
                   fontSize = 11.sp,
                   color = SwipeDelete
                 )
@@ -217,7 +215,7 @@ fun ConfigurationScreen(
               },
               checked = showSwipeButtons,
               onCheckedChange = { checked ->
-                viewModel.setShowSwipeButtons(context, checked)
+                viewModel.setShowSwipeButtons(checked)
               }
             )
 
