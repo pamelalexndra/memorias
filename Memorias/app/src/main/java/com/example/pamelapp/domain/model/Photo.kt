@@ -1,6 +1,8 @@
 package com.example.pamelapp.domain.model
 
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import java.time.Instant
 import java.time.LocalDate
 
@@ -18,11 +20,14 @@ data class Photo(
     val height: Int = 0
 ) {
   val yearsAgo: Int
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = LocalDate.now().year - year
 
   val stableFallbackHash: String
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = "${id}_${sizeBytes}_${dateTaken.toEpochMilli()}"
 
   val isValidForOnThisDay: Boolean
+    @RequiresApi(Build.VERSION_CODES.O)
     get() = yearsAgo > 0
 }

@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.pamelapp.ui.screens.configscreen.ConfigurationScreen
 import com.example.pamelapp.ui.screens.deletephotoscreen.DeletePhotoScreen
+import com.example.pamelapp.ui.screens.favoritesscreen.FavoritesScreen
 //import com.example.pamelapp.ui.screens.favoritesscreen.FavoritesScreen
 import com.example.pamelapp.ui.screens.loginscreen.LoginScreen
 import com.example.pamelapp.ui.screens.registerscreen.RegisterScreen
@@ -50,15 +51,15 @@ fun MemoriasApp() {
           navigateToDelete = { backStack.add(Routes.DeletePhoto) },
           navigateToFavorites = { backStack.add(Routes.Favorites) },
           navigateToConfiguration = { backStack.add(Routes.Configuration) },
-          viewModel = swipeViewModel
+          swipeViewModel = swipeViewModel
         )
       }
 
-      /*entry<Routes.Favorites> {
+      entry<Routes.Favorites> {
         FavoritesScreen(
           navigateToBack = { backStack.removeLastOrNull() }
         )
-      }*/
+      }
 
       entry<Routes.DeletePhoto> {
         DeletePhotoScreen(

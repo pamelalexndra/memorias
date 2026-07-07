@@ -1,67 +1,62 @@
 package com.example.pamelapp.ui.screens.favoritesscreen
-/*
-import android.content.ContentResolver
-import android.content.Context
-import android.os.Build
-import android.provider.MediaStore
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.pamelapp.data.Photo
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class FavoriteViewModel : ViewModel() {
-  private val _favorites = MutableStateFlow<List<Photo>>(emptyList())
-  val favorites = _favorites.asStateFlow()
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.pamelapp.MemoriasApplication
+import com.example.pamelapp.domain.model.Photo
+import com.example.pamelapp.domain.repository.favoritePhotoRepository.FavoritePhotoRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class FavoritePhotoViewModel(private val favoritePhotoRepository: FavoritePhotoRepository) :
+  ViewModel() {
   
-  private val _recycleBinMode = MutableStateFlow<Boolean>(false)
-  val recycleBinMode = _recycleBinMode.asStateFlow()
+  val favoritePhotos: StateFlow<List<Photo>> = favoritePhotoRepository.getFavoritePhotos()
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5_000),
+      initialValue = emptyList()
+    )
   
-  private val _isLoading = MutableStateFlow<Boolean>(false)
-  val isLoading = _isLoading.asStateFlow()
+  val favoritePhotosIds: StateFlow<Set<Long>> = favoritePhotos
+    .map { movies -> movies.map { it.id }.toSet() }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5_000),
+      initialValue = emptySet()
+    )
   
-  fun loadFavorites(context: Context) {
+  fun addFavoritePhoto(favoritePhoto: Photo) {
     viewModelScope.launch {
-      val prefs = context.getSharedPreferences("memorias_prefs", Context.MODE_PRIVATE)
-      val favoriteIds = prefs.getStringSet("favorites", emptySet()) ?: emptySet()
-      _recycleBinMode.update { prefs.getBoolean("recycle_bin_mode", false) }
-      // Los fotos se cargarán desde SwipeViewModel, por ahora mantenemos lista vacía
+      favoritePhotoRepository.addFavoritePhoto(favoritePhoto)
     }
   }
   
-  fun updateFavorites(photos: List<Photo>) {
-    _favorites.update { photos }
+  fun deleteFavoritePhoto(favoritePhoto: Photo) {
+    viewModelScope.launch {
+      favoritePhotoRepository.removeFavoritePhoto(favoritePhoto)
+    }
   }
   
-  fun deleteSelected(
-    photos: List<Photo>,
-    contentResolver: ContentResolver,
-    launcher: ActivityResultLauncher<IntentSenderRequest>
-  ) {
+  fun clearFavoritePhotos() {
     viewModelScope.launch {
-      _isLoading.update { true }
-      withContext(kotlinx.coroutines.Dispatchers.IO) {
-        if (_recycleBinMode.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-          val uris = photos.map { it.uri }
-          val pendingIntent = MediaStore.createTrashRequest(contentResolver, uris, true)
-          launcher.launch(IntentSenderRequest.Builder(pendingIntent.intentSender).build())
-        } else {
-          photos.forEach { photo ->
-            contentResolver.delete(photo.uri, null, null)
-          }
-          onDeleteSuccess(photos)
-        }
+      favoritePhotoRepository.removeFavoritePhotos()
+    }
+  }
+  
+  companion object {
+    fun provideFactory() = viewModelFactory {
+      initializer {
+        val app = this[APPLICATION_KEY] as MemoriasApplication
+        FavoritePhotoViewModel(app.appProvider.provideFavoritePhotoRepository())
       }
-      _isLoading.update { false }
     }
   }
   
-  fun onDeleteSuccess(deletedPhotos: List<Photo>) {
-    _favorites.update { current -> current.filterNot { deletedPhotos.contains(it) } }
-  }
-}*/
+}

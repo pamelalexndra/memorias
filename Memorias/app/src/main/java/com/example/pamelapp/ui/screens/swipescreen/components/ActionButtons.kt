@@ -27,73 +27,73 @@ import com.example.pamelapp.ui.theme.SwipeKeep
 
 @Composable
 fun ActionButtons(
-    onKeep: () -> Unit,
-    onFavorite: () -> Unit,
-    onDelete: () -> Unit,
-    onUndoLastAction: () -> Unit,
+  onKeep: () -> Unit,
+  onFavorite: () -> Unit,
+  onDelete: () -> Unit,
+  onUndoLastAction: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 34.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ActionButton(
-            onClick = onKeep,
-            icon = Icons.Default.Check,
-            color = SwipeKeep,
-            size = 56,
-            contentDescription = "Conservar"
-        )
-
-        ActionButton(
-            onClick = onUndoLastAction,
-            icon = Icons.Default.Refresh,
-            color = BrownMid,
-            size = 46,
-            contentDescription = "Deshacer"
-        )
-
-        ActionButton(
-            onClick = onFavorite,
-            icon = Icons.Default.Favorite,
-            color = SwipeFav,
-            size = 48,
-            contentDescription = "Favorita"
-        )
-
-        ActionButton(
-            onClick = onDelete,
-            icon = Icons.Default.Delete,
-            color = SwipeDelete,
-            size = 56,
-            contentDescription = "Borrar"
-        )
-    }
+  Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 34.dp, vertical = 4.dp),
+    horizontalArrangement = Arrangement.SpaceEvenly,
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    ActionButton(
+      onClick = onKeep,
+      icon = Icons.Default.Check,
+      color = SwipeKeep,
+      size = 56,
+      contentDescription = "Conservar"
+    )
+    
+    ActionButton(
+      onClick = onUndoLastAction,
+      icon = Icons.Default.Refresh,
+      color = BrownMid,
+      size = 46,
+      contentDescription = "Deshacer"
+    )
+    
+    ActionButton(
+      onClick = onFavorite,
+      icon = Icons.Default.Favorite,
+      color = SwipeFav,
+      size = 48,
+      contentDescription = "Favorita"
+    )
+    
+    ActionButton(
+      onClick = onDelete,
+      icon = Icons.Default.Delete,
+      color = SwipeDelete,
+      size = 56,
+      contentDescription = "Borrar"
+    )
+  }
 }
 
 @Composable
 fun ActionButton(
-    onClick: () -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    size: Int,
-    contentDescription: String,
+  onClick: () -> Unit,
+  icon: androidx.compose.ui.graphics.vector.ImageVector,
+  color: Color,
+  size: Int,
+  contentDescription: String,
 ) {
-    Surface(
-        onClick = onClick,
-        shape = CircleShape,
-        color = color.copy(alpha = 0.12f),
-        modifier = Modifier.size(size.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = color,
-                modifier = Modifier.size((size * 0.45).dp)
-            )
-        }
+  Surface(
+    onClick = onClick,
+    shape = CircleShape,
+    color = color.copy(alpha = 0.12f),
+    modifier = Modifier.size(size.dp)
+  ) {
+    Box(contentAlignment = Alignment.Center) {
+      Icon(
+        imageVector = icon,
+        contentDescription = contentDescription,
+        tint = color,
+        modifier = Modifier.size((size * 0.45).dp)
+      )
     }
+  }
 }

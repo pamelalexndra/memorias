@@ -20,62 +20,64 @@ import com.example.pamelapp.ui.theme.BrownMid
 
 @Composable
 fun SwipeContent(
-    photo: Photo,
-    showActionButtons: Boolean,
-    onKeep: () -> Unit,
-    onFavorite: () -> Unit,
-    onDelete: () -> Unit,
-    onUndoLastAction: () -> Unit,
+  photo: Photo,
+  isFavorite: Boolean,
+  showActionButtons: Boolean,
+  onKeep: () -> Unit,
+  onFavorite: () -> Unit,
+  onDelete: () -> Unit,
+  onUndoLastAction: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+  Column(
+    modifier = Modifier.fillMaxSize(),
+    horizontalAlignment = Alignment.CenterHorizontally,
+  ) {
+    Text(
+      text = "Hace ${photo.yearsAgo} año${if (photo.yearsAgo != 1) "s" else ""} · ${photo.year}",
+      color = BrownMid,
+      fontSize = 13.sp,
+      modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+    )
+    
+    Box(
+      modifier = Modifier
+        .weight(1f)
+        .fillMaxWidth()
+        .padding(horizontal = 20.dp, vertical = 8.dp),
+      contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = "Hace ${photo.yearsAgo} año${if (photo.yearsAgo != 1) "s" else ""} · ${photo.year}",
-            color = BrownMid,
-            fontSize = 13.sp,
-            modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+      key(photo.id) {
+        SwipeablePhotoCard(
+          photo = photo,
+          isFavorite = isFavorite,
+          onKeep = onKeep,
+          onDelete = onDelete,
+          onFavorite = onFavorite,
+          onUndoLastAction = onUndoLastAction
         )
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            key(photo.id) {
-                SwipeablePhotoCard(
-                    photo = photo,
-                    onKeep = onKeep,
-                    onDelete = onDelete,
-                    onFavorite = onFavorite,
-                    onUndoLastAction = onUndoLastAction
-                )
-            }
-        }
-
-        if (showActionButtons) {
-            ActionButtons(
-                onKeep = onKeep,
-                onFavorite = onFavorite,
-                onDelete = onDelete,
-                onUndoLastAction = onUndoLastAction
-            )
-
-            Text(
-                text = "← conservar   ↑ favorita   borrar →",
-                color = BrownLight,
-                fontSize = 11.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-        Text(
-            text = "Doble toque para deshacer la última acción",
-            color = BrownMid,
-            fontSize = 11.sp,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+      }
     }
+    
+    if (showActionButtons) {
+      ActionButtons(
+        onKeep = onKeep,
+        onFavorite = onFavorite,
+        onDelete = onDelete,
+        onUndoLastAction = onUndoLastAction
+      )
+      
+      Text(
+        text = "← conservar   ↑ favorita   borrar →",
+        color = BrownLight,
+        fontSize = 11.sp,
+        modifier = Modifier.padding(top = 8.dp)
+      )
+    }
+    Text(
+      text = "Doble toque para deshacer la última acción",
+      color = BrownMid,
+      fontSize = 11.sp,
+      modifier = Modifier.padding(bottom = 12.dp)
+    )
+  }
 }

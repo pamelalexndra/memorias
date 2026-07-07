@@ -13,13 +13,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.mapSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pamelapp.ui.scaffold.AppScaffold
+import com.example.pamelapp.ui.screens.favoritesscreen.FavoritePhotoViewModel
 import com.example.pamelapp.ui.screens.swipescreen.components.EmptyDayCard
 import com.example.pamelapp.ui.screens.swipescreen.components.ErrorState
 import com.example.pamelapp.ui.screens.swipescreen.components.FinishedState
@@ -36,53 +45,56 @@ fun SwipeScreen(
   navigateToDelete: () -> Unit,
   navigateToFavorites: () -> Unit,
   navigateToConfiguration: () -> Unit,
-  viewModel: SwipeViewModel = viewModel()
+  swipeViewModel: SwipeViewModel = viewModel(),
+  favoriteViewModel: FavoritePhotoViewModel = viewModel(factory = FavoritePhotoViewModel.provideFactory())
 ) {
-  val state by viewModel.state.collectAsState()
+  val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
+  val favoritePhotosIds by favoriteViewModel.favoritePhotosIds.collectAsStateWithLifecycle()
+  val state by swipeViewModel.state.collectAsState()
   val context = LocalContext.current
-
+  
   val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
     Manifest.permission.READ_MEDIA_IMAGES
   } else {
     Manifest.permission.READ_EXTERNAL_STORAGE
   }
-
+  
   val permissionLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.RequestPermission()
   ) { granted ->
     if (granted) {
-      viewModel.loadSettings()
-      viewModel.loadPhotos()
-      viewModel.loadFavorites()
+      swipeViewModel.loadSettings()
+      swipeViewModel.loadPhotos()
+      swipeViewModel.loadFavorites()
     } else {
-      viewModel.setPermissionDenied()
+      swipeViewModel.setPermissionDenied()
     }
   }
-
+  
   LaunchedEffect(Unit) {
     val alreadyGranted = ContextCompat.checkSelfPermission(
       context,
       permission
     ) == PackageManager.PERMISSION_GRANTED
-
+    
     if (alreadyGranted) {
-      viewModel.loadSettings()
-      viewModel.loadPhotos()
-      viewModel.loadFavorites()
+      swipeViewModel.loadSettings()
+      swipeViewModel.loadPhotos()
+      swipeViewModel.loadFavorites()
     } else {
       permissionLauncher.launch(permission)
     }
   }
-
+  
   val total = state.photos.size
   val current = (state.currentIndex + 1).coerceAtMost(total)
   val photo = state.photos.getOrNull(state.currentIndex)
-
+  
   AppScaffold(
     title = "Memorias",
     actions = {
       SwipeTopBarActions(
-        favoritedCount = state.favorited,
+        favoritedCount = favoritePhotos.size,
         pendingDeleteCount = state.pendingDelete.size,
         totalPhotos = total,
         currentPosition = current,
@@ -104,43 +116,49 @@ fun SwipeScreen(
         state.loading -> {
           LoadingState()
         }
-
+        
         state.permissionDenied -> {
           PermissionDeniedState()
         }
-
+        
         state.error != null -> {
           ErrorState(
             message = state.error ?: "Ocurrió un error",
             onRetry = {
-              viewModel.loadPhotos()
-              viewModel.loadFavorites()
+              swipeViewModel.loadPhotos()
+              swipeViewModel.loadFavorites()
             }
           )
         }
-
+        
         state.photos.isEmpty() -> {
           EmptyDayCard()
         }
-
+        
         state.currentIndex >= state.photos.size -> {
           FinishedState(
             deletedCount = state.deletedCount,
             freedBytes = state.freedBytes,
             pendingDeleteCount = state.pendingDelete.size,
             onReviewDelete = navigateToDelete,
-            onRestart = { viewModel.restartReview() }
+            onRestart = { swipeViewModel.restartReview() }
           )
         }
-
+        
         photo != null -> {
+          val isFavorite = photo.id in favoritePhotosIds
+          
           SwipeContent(
             photo = photo,
+            isFavorite = isFavorite,
             showActionButtons = state.showSwipeButtons,
-            onKeep = { viewModel.onKeep() },
-            onFavorite = { viewModel.onFavorite() },
-            onDelete = { viewModel.onDelete() },
-            onUndoLastAction = { viewModel.undoLastSwipeAction() }
+            onKeep = { swipeViewModel.onKeep() },
+            onFavorite = {
+              favoriteViewModel.addFavoritePhoto(photo)
+              swipeViewModel.onFavorite()
+            },
+            onDelete = { swipeViewModel.onDelete() },
+            onUndoLastAction = { swipeViewModel.undoLastSwipeAction() }
           )
         }
       }
