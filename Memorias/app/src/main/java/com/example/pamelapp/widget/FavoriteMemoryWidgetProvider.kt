@@ -17,7 +17,6 @@ import com.example.pamelapp.domain.model.Photo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.DateTimeException
 import java.time.LocalDate
 import kotlin.math.abs
@@ -29,139 +28,164 @@ class FavoriteMemoryWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        appWidgetIds.forEach { appWidgetId ->
-            updateWidgetAsync(
-                context = context.applicationContext,
-                appWidgetManager = appWidgetManager,
-                appWidgetId = appWidgetId
-            )
+        val pendingResult = goAsync()
+        val appContext = context.applicationContext
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                appWidgetIds.forEach { appWidgetId ->
+                    updateSingleWidget(
+                        context = appContext,
+                        appWidgetManager = appWidgetManager,
+                        appWidgetId = appWidgetId
+                    )
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
     companion object {
 
         fun updateAllWidgets(context: Context) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val appContext = context.applicationContext
+            val appWidgetManager = AppWidgetManager.getInstance(appContext)
+
             val componentName = ComponentName(
-                context,
+                appContext,
                 FavoriteMemoryWidgetProvider::class.java
             )
 
             val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
-            widgetIds.forEach { widgetId ->
-                updateWidgetAsync(
-                    context = context.applicationContext,
-                    appWidgetManager = appWidgetManager,
-                    appWidgetId = widgetId
-                )
+            CoroutineScope(Dispatchers.IO).launch {
+                widgetIds.forEach { widgetId ->
+                    updateSingleWidget(
+                        context = appContext,
+                        appWidgetManager = appWidgetManager,
+                        appWidgetId = widgetId
+                    )
+                }
             }
         }
-        private fun updateWidgetAsync(
+
+        private suspend fun updateSingleWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val database = AppDatabase.getDatabase(context)
+            try {
+                val database = AppDatabase.getDatabase(context)
 
-                    val favorites = database
-                        .favoritePhotoDAO()
-                        .getFavoritePhotosOnce()
-                        .map { entity -> entity.toPhoto() }
+                val favorites = database
+                    .favoritePhotoDAO()
+                    .getFavoritePhotosOnce()
+                    .map { entity -> entity.toPhoto() }
 
-                    val selectedPhoto = selectPhotoForToday(favorites)
+                val selectedPhoto = selectPhotoForToday(favorites)
 
-                    withContext(Dispatchers.Main) {
-                        val views = RemoteViews(
-                            context.packageName,
-                            R.layout.widget_favorite_memory
+                val views = RemoteViews(
+                    context.packageName,
+                    R.layout.widget_favorite_memory
+                )
+
+                views.setOnClickPendingIntent(
+                    R.id.widgetRoot,
+                    createOpenLoginPendingIntent(context)
+                )
+
+                if (selectedPhoto == null) {
+                    views.setTextViewText(
+                        R.id.widgetTitle,
+                        "Memorias"
+                    )
+
+                    views.setTextViewText(
+                        R.id.widgetSubtitle,
+                        "Aún no tienes favoritas"
+                    )
+
+                    views.setImageViewResource(
+                        R.id.widgetPhoto,
+                        R.drawable.widget_placeholder
+                    )
+                } else {
+                    views.setTextViewText(
+                        R.id.widgetTitle,
+                        "Memorias"
+                    )
+
+                    views.setTextViewText(
+                        R.id.widgetSubtitle,
+                        "${selectedPhoto.day}/${selectedPhoto.month}/${selectedPhoto.year}"
+                    )
+
+                    val bitmap = loadBitmapFromPhoto(
+                        context = context,
+                        photo = selectedPhoto
+                    )
+
+                    if (bitmap != null) {
+                        views.setImageViewBitmap(
+                            R.id.widgetPhoto,
+                            bitmap
                         )
-
-                        views.setOnClickPendingIntent(
-                            R.id.widgetRoot,
-                            createOpenLoginPendingIntent(context)
-                        )
-
-                        if (selectedPhoto == null) {
-                            views.setTextViewText(
-                                R.id.widgetTitle,
-                                "Memorias"
-                            )
-
-                            views.setTextViewText(
-                                R.id.widgetSubtitle,
-                                "Aún no tienes favoritas"
-                            )
-
-                            views.setImageViewResource(
-                                R.id.widgetPhoto,
-                                R.drawable.widget_placeholder
-                            )
-                        } else {
-                            views.setTextViewText(
-                                R.id.widgetSubtitle,
-                                "${selectedPhoto.day}/${selectedPhoto.month}/${selectedPhoto.year}"
-                            )
-
-                            val bitmap = loadBitmapFromPhoto(
-                                context = context,
-                                photo = selectedPhoto
-                            )
-
-                            if (bitmap != null) {
-                                views.setImageViewBitmap(
-                                    R.id.widgetPhoto,
-                                    bitmap
-                                )
-                            } else {
-                                views.setImageViewResource(
-                                    R.id.widgetPhoto,
-                                    R.drawable.widget_placeholder
-                                )
-                            }
-                        }
-
-                        appWidgetManager.updateAppWidget(
-                            appWidgetId,
-                            views
-                        )
-                    }
-                } catch (exception: Exception) {
-                    withContext(Dispatchers.Main) {
-                        val views = RemoteViews(
-                            context.packageName,
-                            R.layout.widget_favorite_memory
-                        )
-
-                        views.setTextViewText(
-                            R.id.widgetTitle,
-                            "Memorias"
-                        )
-
-                        views.setTextViewText(
-                            R.id.widgetSubtitle,
-                            "No se pudo cargar la foto"
-                        )
-
+                    } else {
                         views.setImageViewResource(
                             R.id.widgetPhoto,
                             R.drawable.widget_placeholder
                         )
-
-                        views.setOnClickPendingIntent(
-                            R.id.widgetRoot,
-                            createOpenLoginPendingIntent(context)
-                        )
-
-                        appWidgetManager.updateAppWidget(
-                            appWidgetId,
-                            views
-                        )
                     }
                 }
+
+                appWidgetManager.updateAppWidget(
+                    appWidgetId,
+                    views
+                )
+            } catch (exception: Exception) {
+                showFallbackWidget(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    appWidgetId = appWidgetId
+                )
             }
+        }
+
+        private fun showFallbackWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int
+        ) {
+            val views = RemoteViews(
+                context.packageName,
+                R.layout.widget_favorite_memory
+            )
+
+            views.setTextViewText(
+                R.id.widgetTitle,
+                "Memorias"
+            )
+
+            views.setTextViewText(
+                R.id.widgetSubtitle,
+                "No se pudo cargar la foto"
+            )
+
+            views.setImageViewResource(
+                R.id.widgetPhoto,
+                R.drawable.widget_placeholder
+            )
+
+            views.setOnClickPendingIntent(
+                R.id.widgetRoot,
+                createOpenLoginPendingIntent(context)
+            )
+
+            appWidgetManager.updateAppWidget(
+                appWidgetId,
+                views
+            )
         }
 
         private fun createOpenLoginPendingIntent(
@@ -229,8 +253,8 @@ class FavoriteMemoryWidgetProvider : AppWidgetProvider() {
             var inSampleSize = 1
 
             if (height > targetHeight || width > targetWidth) {
-                var halfHeight = height / 2
-                var halfWidth = width / 2
+                val halfHeight = height / 2
+                val halfWidth = width / 2
 
                 while (
                     halfHeight / inSampleSize >= targetHeight &&
@@ -249,6 +273,7 @@ class FavoriteMemoryWidgetProvider : AppWidgetProvider() {
             if (favorites.isEmpty()) return null
 
             val today = LocalDate.now()
+
             val sameDayPhotos = favorites.filter { photo ->
                 photo.month == today.monthValue && photo.day == today.dayOfMonth
             }

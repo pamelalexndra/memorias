@@ -37,6 +37,12 @@ import com.example.pamelapp.ui.theme.SwipeDelete
 import com.example.pamelapp.ui.theme.SwipeFav
 import com.example.pamelapp.ui.theme.SwipeKeep
 import kotlinx.coroutines.launch
+import android.os.Build
+import android.view.HapticFeedbackConstants
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 
 @Composable
 fun SwipeablePhotoCard(
@@ -51,6 +57,18 @@ fun SwipeablePhotoCard(
   val offsetY = remember(photo.id) { Animatable(0f) }
   val threshold = 160f
   val scope = rememberCoroutineScope()
+  val view = LocalView.current
+  var deleteHapticTriggered by remember(photo.id) { mutableStateOf(false) }
+
+  fun performDeleteHaptic() {
+    val feedbackType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      HapticFeedbackConstants.REJECT
+    } else {
+      HapticFeedbackConstants.LONG_PRESS
+    }
+
+    view.performHapticFeedback(feedbackType)
+  }
 
   val overlayColor = when {
     offsetX.value > 80f -> SwipeDelete.copy(
@@ -95,9 +113,21 @@ fun SwipeablePhotoCard(
           onDrag = { change, drag ->
             change.consume()
 
+            val nextOffsetX = offsetX.value + drag.x
+            val nextOffsetY = offsetY.value + drag.y
+
+            if (nextOffsetX > threshold && !deleteHapticTriggered) {
+              deleteHapticTriggered = true
+              performDeleteHaptic()
+            }
+
+            if (nextOffsetX <= threshold) {
+              deleteHapticTriggered = false
+            }
+
             scope.launch {
-              offsetX.snapTo(offsetX.value + drag.x)
-              offsetY.snapTo(offsetY.value + drag.y)
+              offsetX.snapTo(nextOffsetX)
+              offsetY.snapTo(nextOffsetY)
             }
           },
           onDragEnd = {
