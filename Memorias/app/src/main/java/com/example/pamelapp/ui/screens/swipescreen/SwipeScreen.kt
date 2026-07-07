@@ -13,14 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.mapSaver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,19 +39,25 @@ fun SwipeScreen(
   navigateToFavorites: () -> Unit,
   navigateToConfiguration: () -> Unit,
   swipeViewModel: SwipeViewModel = viewModel(),
-  favoriteViewModel: FavoritePhotoViewModel = viewModel(factory = FavoritePhotoViewModel.provideFactory())
+  favoriteViewModel: FavoritePhotoViewModel = viewModel(
+    factory = FavoritePhotoViewModel.provideFactory()
+  )
 ) {
   val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
   val favoritePhotosIds by favoriteViewModel.favoritePhotosIds.collectAsStateWithLifecycle()
   val state by swipeViewModel.state.collectAsState()
   val context = LocalContext.current
-  
+
+  LaunchedEffect(favoritePhotosIds) {
+    swipeViewModel.syncFavoriteIds(favoritePhotosIds)
+  }
+
   val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
     Manifest.permission.READ_MEDIA_IMAGES
   } else {
     Manifest.permission.READ_EXTERNAL_STORAGE
   }
-  
+
   val permissionLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.RequestPermission()
   ) { granted ->
@@ -70,13 +69,13 @@ fun SwipeScreen(
       swipeViewModel.setPermissionDenied()
     }
   }
-  
+
   LaunchedEffect(Unit) {
     val alreadyGranted = ContextCompat.checkSelfPermission(
       context,
       permission
     ) == PackageManager.PERMISSION_GRANTED
-    
+
     if (alreadyGranted) {
       swipeViewModel.loadSettings()
       swipeViewModel.loadPhotos()
@@ -85,11 +84,11 @@ fun SwipeScreen(
       permissionLauncher.launch(permission)
     }
   }
-  
+
   val total = state.photos.size
   val current = (state.currentIndex + 1).coerceAtMost(total)
   val photo = state.photos.getOrNull(state.currentIndex)
-  
+
   AppScaffold(
     title = "Memorias",
     actions = {
@@ -116,11 +115,11 @@ fun SwipeScreen(
         state.loading -> {
           LoadingState()
         }
-        
+
         state.permissionDenied -> {
           PermissionDeniedState()
         }
-        
+
         state.error != null -> {
           ErrorState(
             message = state.error ?: "Ocurrió un error",
@@ -130,35 +129,42 @@ fun SwipeScreen(
             }
           )
         }
-        
+
         state.photos.isEmpty() -> {
           EmptyDayCard()
         }
-        
+
         state.currentIndex >= state.photos.size -> {
           FinishedState(
             deletedCount = state.deletedCount,
             freedBytes = state.freedBytes,
             pendingDeleteCount = state.pendingDelete.size,
             onReviewDelete = navigateToDelete,
-            onRestart = { swipeViewModel.restartReview() }
+            onRestart = {
+              swipeViewModel.restartReview()
+            }
           )
         }
-        
+
         photo != null -> {
           val isFavorite = photo.id in favoritePhotosIds
-          
+
           SwipeContent(
             photo = photo,
             isFavorite = isFavorite,
             showActionButtons = state.showSwipeButtons,
-            onKeep = { swipeViewModel.onKeep() },
+            onKeep = {
+              swipeViewModel.onKeep()
+            },
             onFavorite = {
-              favoriteViewModel.addFavoritePhoto(photo)
               swipeViewModel.onFavorite()
             },
-            onDelete = { swipeViewModel.onDelete() },
-            onUndoLastAction = { swipeViewModel.undoLastSwipeAction() }
+            onDelete = {
+              swipeViewModel.onDelete()
+            },
+            onUndoLastAction = {
+              swipeViewModel.undoLastSwipeAction()
+            }
           )
         }
       }

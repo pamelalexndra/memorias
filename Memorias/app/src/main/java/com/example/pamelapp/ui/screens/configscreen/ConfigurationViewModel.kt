@@ -12,7 +12,6 @@ class ConfigurationViewModel : ViewModel() {
 
   private val prefsKey = "memorias_prefs"
   private val deleteModeKey = "delete_mode"
-  private val favoritesKey = "favorites"
   private val showSwipeButtonsKey = "show_swipe_buttons"
 
   private val _deleteMode = MutableStateFlow(DeleteMode.TRASH)
@@ -52,14 +51,6 @@ class ConfigurationViewModel : ViewModel() {
 
     _showSwipeButtons.update { show }
   }
-
-  fun clearFavorites(context: Context) {
-    context.getSharedPreferences(prefsKey, Context.MODE_PRIVATE)
-      .edit {
-        remove(favoritesKey)
-      }
-  }
-
   fun deleteAccount() {
     // Pendiente: implementar lógica de borrado de cuenta.
   }

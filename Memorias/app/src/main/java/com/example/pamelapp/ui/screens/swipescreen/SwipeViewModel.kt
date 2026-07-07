@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pamelapp.MemoriasApplication
 import com.example.pamelapp.data.media.MediaStorePhotoRepository
 import com.example.pamelapp.data.preferences.SwipePreferences
 import com.example.pamelapp.domain.model.DeleteMode
@@ -12,9 +13,10 @@ import com.example.pamelapp.domain.model.Photo
 import com.example.pamelapp.domain.model.SwipeActionRecord
 import com.example.pamelapp.domain.model.SwipeActionType
 import com.example.pamelapp.domain.repository.PhotoRepository
+import com.example.pamelapp.domain.repository.favoritePhotoRepository.FavoritePhotoRepository
+import com.example.pamelapp.widget.FavoriteMemoryWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,21 +26,24 @@ import java.util.ArrayDeque
 class SwipeViewModel(
   application: Application
 ) : AndroidViewModel(application) {
-  
+
   private val appContext = application.applicationContext
-  
+
   private val photoRepository: PhotoRepository =
     MediaStorePhotoRepository(appContext.contentResolver)
-  
+
+  private val favoritePhotoRepository: FavoritePhotoRepository =
+    (application as MemoriasApplication).appProvider.provideFavoritePhotoRepository()
+
   private val preferences = SwipePreferences(appContext)
-  
+
   private val _state = MutableStateFlow(UiState())
   val state = _state.asStateFlow()
-  
-  private var cachedFavoriteIds: Set<String> = emptySet()
-  
+
+  private var cachedFavoriteIds: Set<Long> = emptySet()
+
   private val undoStack = ArrayDeque<SwipeActionRecord>()
-  
+
   fun loadSettings() {
     _state.update {
       it.copy(
@@ -47,23 +52,23 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun setDeleteMode(mode: DeleteMode) {
     preferences.setDeleteMode(mode)
-    
+
     _state.update {
       it.copy(deleteMode = mode)
     }
   }
-  
+
   fun setShowSwipeButtons(show: Boolean) {
     preferences.setShowSwipeButtons(show)
-    
+
     _state.update {
       it.copy(showSwipeButtons = show)
     }
   }
-  
+
   fun setError(message: String) {
     _state.update {
       it.copy(
@@ -72,7 +77,7 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   @RequiresApi(Build.VERSION_CODES.O)
   fun loadPhotos() {
     viewModelScope.launch {
@@ -83,16 +88,19 @@ class SwipeViewModel(
           permissionDenied = false
         )
       }
-      
+
       try {
+        val favoritePhotosFromRoom = favoritePhotoRepository.getFavoritePhotosOnce()
+        cachedFavoriteIds = favoritePhotosFromRoom.map { it.id }.toSet()
+
         val photos = photoRepository.getPhotosOnThisDay()
-        
+
         val favoritePhotos = photos.filter {
-          cachedFavoriteIds.contains(it.id.toString())
+          it.id in cachedFavoriteIds
         }
-        
+
         undoStack.clear()
-        
+
         _state.update {
           it.copy(
             loading = false,
@@ -114,62 +122,74 @@ class SwipeViewModel(
       }
     }
   }
-  
+
   fun loadFavorites() {
-    cachedFavoriteIds = preferences.getFavoriteIds()
-    
-    val favoritePhotos = _state.value.photos.filter {
-      cachedFavoriteIds.contains(it.id.toString())
-    }
-    
-    _state.update {
-      it.copy(
-        favoritePhotos = favoritePhotos,
-        favorited = favoritePhotos.size
-      )
+    viewModelScope.launch {
+      val favoritePhotosFromRoom = favoritePhotoRepository.getFavoritePhotosOnce()
+      val favoriteIds = favoritePhotosFromRoom.map { it.id }.toSet()
+
+      syncFavoriteIds(favoriteIds)
     }
   }
-  
-  fun toggleFavorite(photo: Photo) {
-    val favoriteIds = preferences.toggleFavorite(photo.id)
-    
+
+  fun syncFavoriteIds(
+    favoriteIds: Set<Long>
+  ) {
     cachedFavoriteIds = favoriteIds
-    
     updateFavoritePhotosFromIds(favoriteIds)
   }
-  
+
+  private fun markFavorite(
+    photo: Photo
+  ) {
+    if (photo.id in cachedFavoriteIds) {
+      updateFavoritePhotosFromIds(cachedFavoriteIds)
+      return
+    }
+
+    val updatedIds = cachedFavoriteIds + photo.id
+    cachedFavoriteIds = updatedIds
+
+    updateFavoritePhotosFromIds(updatedIds)
+
+    viewModelScope.launch {
+      favoritePhotoRepository.addFavoritePhoto(photo)
+      FavoriteMemoryWidgetProvider.updateAllWidgets(appContext)
+    }
+  }
+
   fun onKeep() {
     val photo = currentPhoto() ?: return
     val state = _state.value
-    
+
     undoStack.addLast(
       SwipeActionRecord(
         type = SwipeActionType.KEEP,
         photo = photo,
         indexBeforeAction = state.currentIndex,
-        wasFavoriteBeforeAction = state.favoritePhotos.any { it.id == photo.id }
+        wasFavoriteBeforeAction = photo.id in cachedFavoriteIds
       )
     )
-    
+
     advancePhoto()
   }
-  
+
   fun onDelete() {
     val photo = currentPhoto() ?: return
     val state = _state.value
-    
+
     undoStack.addLast(
       SwipeActionRecord(
         type = SwipeActionType.DELETE,
         photo = photo,
         indexBeforeAction = state.currentIndex,
-        wasFavoriteBeforeAction = state.favoritePhotos.any { it.id == photo.id }
+        wasFavoriteBeforeAction = photo.id in cachedFavoriteIds
       )
     )
-    
+
     _state.update { currentState ->
       val alreadyQueued = currentState.pendingDelete.any { it.id == photo.id }
-      
+
       currentState.copy(
         pendingDelete = if (alreadyQueued) {
           currentState.pendingDelete
@@ -178,33 +198,35 @@ class SwipeViewModel(
         }
       )
     }
-    
+
     advancePhoto()
   }
-  
+
   fun onFavorite() {
     val photo = currentPhoto() ?: return
     val state = _state.value
-    
+
+    val wasFavoriteBeforeAction = photo.id in cachedFavoriteIds
+
     undoStack.addLast(
       SwipeActionRecord(
         type = SwipeActionType.FAVORITE,
         photo = photo,
         indexBeforeAction = state.currentIndex,
-        wasFavoriteBeforeAction = state.favoritePhotos.any { it.id == photo.id }
+        wasFavoriteBeforeAction = wasFavoriteBeforeAction
       )
     )
-    
-    toggleFavorite(photo)
+
+    markFavorite(photo)
     advancePhoto()
   }
-  
+
   fun undoLastSwipeAction() {
     if (undoStack.isEmpty()) return
-    
+
     val lastAction = undoStack.removeLast()
     val photo = lastAction.photo
-    
+
     when (lastAction.type) {
       SwipeActionType.KEEP -> {
         _state.update { state ->
@@ -215,7 +237,7 @@ class SwipeViewModel(
           )
         }
       }
-      
+
       SwipeActionType.DELETE -> {
         _state.update { state ->
           state.copy(
@@ -226,13 +248,13 @@ class SwipeViewModel(
           )
         }
       }
-      
+
       SwipeActionType.FAVORITE -> {
         restoreFavoriteState(
           photo = photo,
           shouldBeFavorite = lastAction.wasFavoriteBeforeAction
         )
-        
+
         _state.update { state ->
           state.copy(
             currentIndex = lastAction.indexBeforeAction.coerceIn(0, state.photos.size),
@@ -243,21 +265,31 @@ class SwipeViewModel(
       }
     }
   }
-  
+
   private fun restoreFavoriteState(
     photo: Photo,
     shouldBeFavorite: Boolean
   ) {
-    val favoriteIds = preferences.restoreFavoriteState(
-      photoId = photo.id,
-      shouldBeFavorite = shouldBeFavorite
-    )
-    
-    cachedFavoriteIds = favoriteIds
-    
-    updateFavoritePhotosFromIds(favoriteIds)
+    val updatedIds = if (shouldBeFavorite) {
+      cachedFavoriteIds + photo.id
+    } else {
+      cachedFavoriteIds - photo.id
+    }
+
+    cachedFavoriteIds = updatedIds
+    updateFavoritePhotosFromIds(updatedIds)
+
+    viewModelScope.launch {
+      if (shouldBeFavorite) {
+        favoritePhotoRepository.addFavoritePhoto(photo)
+      } else {
+        favoritePhotoRepository.removeFavoritePhoto(photo)
+      }
+
+      FavoriteMemoryWidgetProvider.updateAllWidgets(appContext)
+    }
   }
-  
+
   fun removeFromQueue(photo: Photo) {
     _state.update { state ->
       state.copy(
@@ -265,22 +297,22 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun onDeleteSuccess() {
     undoStack.clear()
-    
+
     val deleted = _state.value.pendingDelete
     if (deleted.isEmpty()) return
-    
+
     val deletedIds = deleted.map { it.id }.toSet()
     val freed = deleted.sumOf { it.sizeBytes }
-    
-    removeDeletedPhotosFromFavoritesPrefs(deletedIds)
-    
+
+    removeDeletedPhotosFromFavorites(deletedIds)
+
     _state.update { state ->
       val remainingPhotos = state.photos.filterNot { it.id in deletedIds }
       val remainingFavorites = state.favoritePhotos.filterNot { it.id in deletedIds }
-      
+
       state.copy(
         photos = remainingPhotos,
         favoritePhotos = remainingFavorites,
@@ -294,7 +326,7 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun onDeleteCancelled() {
     _state.update {
       it.copy(
@@ -303,13 +335,13 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun deletePendingDirectly(
     onComplete: () -> Unit
   ) {
     val photosToDelete = _state.value.pendingDelete
     if (photosToDelete.isEmpty()) return
-    
+
     viewModelScope.launch {
       _state.update {
         it.copy(
@@ -317,7 +349,7 @@ class SwipeViewModel(
           error = null
         )
       }
-      
+
       val successfullyDeleted = withContext(Dispatchers.IO) {
         photosToDelete.filter { photo ->
           try {
@@ -327,19 +359,19 @@ class SwipeViewModel(
           }
         }
       }
-      
+
       if (successfullyDeleted.isNotEmpty()) {
         val deletedIds = successfullyDeleted.map { it.id }.toSet()
         val freed = successfullyDeleted.sumOf { it.sizeBytes }
-        
-        removeDeletedPhotosFromFavoritesPrefs(deletedIds)
+
+        removeDeletedPhotosFromFavorites(deletedIds)
         undoStack.clear()
-        
+
         _state.update { state ->
           val remainingPending = state.pendingDelete.filterNot { it.id in deletedIds }
           val remainingPhotos = state.photos.filterNot { it.id in deletedIds }
           val remainingFavorites = state.favoritePhotos.filterNot { it.id in deletedIds }
-          
+
           state.copy(
             loading = false,
             photos = remainingPhotos,
@@ -352,7 +384,7 @@ class SwipeViewModel(
             error = null
           )
         }
-        
+
         onComplete()
       } else {
         _state.update {
@@ -364,18 +396,23 @@ class SwipeViewModel(
       }
     }
   }
-  
-  private fun removeDeletedPhotosFromFavoritesPrefs(
+
+  private fun removeDeletedPhotosFromFavorites(
     deletedIds: Set<Long>
   ) {
-    val favoriteIds = preferences.removeFavorites(deletedIds)
-    
-    cachedFavoriteIds = favoriteIds
+    cachedFavoriteIds = cachedFavoriteIds - deletedIds
+
+    updateFavoritePhotosFromIds(cachedFavoriteIds)
+
+    viewModelScope.launch {
+      favoritePhotoRepository.removeFavoritePhotosByIds(deletedIds)
+      FavoriteMemoryWidgetProvider.updateAllWidgets(appContext)
+    }
   }
-  
+
   fun restartReview() {
     undoStack.clear()
-    
+
     _state.update {
       it.copy(
         currentIndex = 0,
@@ -384,10 +421,10 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun reset() {
     undoStack.clear()
-    
+
     _state.update {
       UiState(
         loading = false,
@@ -399,7 +436,7 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun setPermissionDenied() {
     _state.update {
       it.copy(
@@ -408,27 +445,30 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun clearFavorites() {
-    preferences.clearFavorites()
-    
     cachedFavoriteIds = emptySet()
-    
+
     _state.update {
       it.copy(
         favoritePhotos = emptyList(),
         favorited = 0
       )
     }
+
+    viewModelScope.launch {
+      favoritePhotoRepository.removeFavoritePhotos()
+      FavoriteMemoryWidgetProvider.updateAllWidgets(appContext)
+    }
   }
-  
+
   private fun updateFavoritePhotosFromIds(
-    favoriteIds: Set<String>
+    favoriteIds: Set<Long>
   ) {
     val favoritePhotos = _state.value.photos.filter {
-      favoriteIds.contains(it.id.toString())
+      it.id in favoriteIds
     }
-    
+
     _state.update {
       it.copy(
         favoritePhotos = favoritePhotos,
@@ -436,11 +476,11 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   private fun advancePhoto() {
     _state.update { state ->
       val nextIndex = state.currentIndex + 1
-      
+
       state.copy(
         currentIndex = if (nextIndex >= state.photos.size) {
           state.photos.size
@@ -450,11 +490,11 @@ class SwipeViewModel(
       )
     }
   }
-  
+
   fun currentPhoto(): Photo? {
     return _state.value.photos.getOrNull(_state.value.currentIndex)
   }
-  
+
   fun getPendingDelete(): List<Photo> {
     return _state.value.pendingDelete
   }

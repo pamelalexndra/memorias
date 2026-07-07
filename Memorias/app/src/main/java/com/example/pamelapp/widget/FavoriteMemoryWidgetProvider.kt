@@ -101,11 +101,6 @@ class FavoriteMemoryWidgetProvider : AppWidgetProvider() {
                             )
                         } else {
                             views.setTextViewText(
-                                R.id.widgetTitle,
-                                "Hace ${selectedPhoto.yearsAgo} año${if (selectedPhoto.yearsAgo != 1) "s" else ""}"
-                            )
-
-                            views.setTextViewText(
                                 R.id.widgetSubtitle,
                                 "${selectedPhoto.day}/${selectedPhoto.month}/${selectedPhoto.year}"
                             )

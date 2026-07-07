@@ -298,7 +298,6 @@ fun ConfigurationScreen(
       confirmButton = {
         TextButton(
           onClick = {
-            viewModel.clearFavorites(context)
             showClearFavoritesDialog = false
           }
         ) {
