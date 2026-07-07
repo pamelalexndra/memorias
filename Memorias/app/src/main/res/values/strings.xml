@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">PamelApp</string>
+    <string name="app_name">Memorias</string>
+    <string name="default_web_client_id">416753938454-0dfh854ucjod1dau3ne5tnrsu5taivft.apps.googleusercontent.com</string>
 </resources>

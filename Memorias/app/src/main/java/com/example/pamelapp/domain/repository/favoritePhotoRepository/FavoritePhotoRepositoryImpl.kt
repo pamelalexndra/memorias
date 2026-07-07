@@ -7,7 +7,7 @@ import com.example.pamelapp.domain.model.Photo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class FavortiePhotoRepositoryImpl(private val photoDAO: PhotoDAO) : FavoritePhotoRepository {
+class FavoritePhotoRepositoryImpl(private val photoDAO: PhotoDAO) : FavoritePhotoRepository {
 
   override fun getFavoritePhotos(): Flow<List<Photo>> {
     return photoDAO.getFavoritePhotos().map { list -> list.map { entity -> entity.toPhoto() } }

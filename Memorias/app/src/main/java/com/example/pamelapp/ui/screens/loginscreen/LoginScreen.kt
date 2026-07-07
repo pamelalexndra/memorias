@@ -1,5 +1,7 @@
 package com.example.pamelapp.ui.screens.loginscreen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pamelapp.ui.scaffold.AppScaffold
 import com.example.pamelapp.ui.theme.*
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun LoginScreen(
   navigateToBack: () -> Unit,
@@ -56,11 +59,9 @@ fun LoginScreen(
   viewModel: LoginViewModel = viewModel()
 ) {
   
-  val isLoading by viewModel.isLoading.collectAsState()
-  val username by viewModel.username.collectAsState()
-  val password by viewModel.password.collectAsState()
+  val isGoogleSignInLoading by viewModel.isGoogleSignInLoading.collectAsState()
   val error by viewModel.error.collectAsState()
-  var showPassword by remember { mutableStateOf(false) }
+  val onSuccess by viewModel.onSuccess.collectAsState()
   val context = LocalContext.current
   
   LaunchedEffect(Unit) {
@@ -90,76 +91,18 @@ fun LoginScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
       ) {
         
-        OutlinedTextField(
-          value = username,
-          onValueChange = { viewModel.updateUsername(it) },
-          label = { Text("Usuario", color = CharcoalWarm) },
-          modifier = Modifier.fillMaxWidth(),
-          singleLine = true,
-          isError = error != null,
-          keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Next
-          ),
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Siena,
-            focusedLabelColor = CharcoalWarm,
-            unfocusedLabelColor = BrownMid,
-            focusedTextColor = CharcoalWarm,
-            unfocusedTextColor = CharcoalWarm
-          )
-        )
-        
-        OutlinedTextField(
-          value = password,
-          onValueChange = { viewModel.updatePassword(it) },
-          label = { Text("Contraseña", color = CharcoalWarm) },
-          modifier = Modifier.fillMaxWidth(),
-          singleLine = true,
-          visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-          keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Done
-          ),
-          isError = error != null,
-          colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Siena,
-            focusedLabelColor = CharcoalWarm,
-            unfocusedLabelColor = BrownMid,
-            focusedTextColor = CharcoalWarm,
-            unfocusedTextColor = CharcoalWarm
-          ),
-          trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
-              Icon(
-                if (showPassword) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                contentDescription = null,
-                tint = BrownMid
-              )
-            }
-          }
-        )
-        
-        if (error != null) {
-          Text(error!!, color = Color.Red, fontSize = 14.sp)
-        }
-        
         Button(
-          onClick = { viewModel.onLoginClick() },
+          onClick = { navigateToSwipe() },
           modifier = Modifier.fillMaxWidth(),
           colors = ButtonDefaults.buttonColors(containerColor = Siena),
-          enabled = !isLoading
         ) {
-          if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-          } else {
-            Text(
-              "Iniciar sesión",
-              color = Color.White,
-              fontSize = 16.sp,
-              fontWeight = FontWeight.SemiBold
-            )
-          }
+          
+          Text(
+            "Iniciar sesión",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+          )
         }
         
         Button(
@@ -169,26 +112,33 @@ fun LoginScreen(
             .height(56.dp),
           colors = ButtonDefaults.buttonColors(containerColor = Color.White),
           shape = RoundedCornerShape(28.dp),
-          enabled = !isLoading
+          enabled = !isGoogleSignInLoading
         ) {
+          if (isGoogleSignInLoading) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(20.dp),
+              color = CharcoalWarm
+            )
+          } else {
+            Text(
+              "Iniciar sesión con Google",
+              fontSize = 16.sp,
+              fontWeight = FontWeight.Medium,
+              color = CharcoalWarm
+            )
+          }
+        }
+        
+        // Mostrar error si existe
+        if (error != null) {
           Text(
-            "Iniciar sesión con Google",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = CharcoalWarm
+            error!!,
+            color = Color.Red,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(vertical = 8.dp)
           )
         }
         
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-          Text(text = "¿No tienes cuenta? ", fontSize = 14.sp, color = BrownMid)
-          Text(
-            text = "Regístrate",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Siena,
-            modifier = Modifier.clickable { navigateToRegister() }
-          )
-        }
       }
     }
   }

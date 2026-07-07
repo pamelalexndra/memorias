@@ -3,6 +3,7 @@ plugins {
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  
 }
 
 android {
@@ -55,10 +56,6 @@ dependencies {
   implementation(libs.kotlinx.coroutines.android.v1110)
   
   implementation(platform(libs.firebase.bom))
-  implementation(libs.firebase.auth)
-  implementation(libs.androidx.credentials)
-  implementation(libs.androidx.credentials.play.services.auth)
-  implementation(libs.googleid)
   
   androidTestImplementation(platform(libs.androidx.compose.bom))
   debugImplementation(libs.androidx.compose.ui.tooling)
@@ -81,6 +78,10 @@ dependencies {
   implementation(platform(libs.firebase.bom.v34120))
   implementation(libs.firebase.crashlytics)
   implementation(libs.firebase.analytics)
+  implementation(libs.firebase.auth)
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services.auth)
+  implementation(libs.googleid)
   
   implementation(libs.room.runtime)
   implementation(libs.room.ktx)
