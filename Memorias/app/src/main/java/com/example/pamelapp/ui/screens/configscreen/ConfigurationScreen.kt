@@ -56,15 +56,20 @@ import com.example.pamelapp.ui.theme.CreamWarm
 import com.example.pamelapp.ui.theme.SwipeDelete
 import com.example.pamelapp.ui.theme.SwipeFav
 import com.example.pamelapp.ui.theme.SwipeKeep
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.pamelapp.ui.screens.favoritesscreen.FavoritePhotoViewModel
 
 @Composable
 fun ConfigurationScreen(
   navigateToBack: () -> Unit,
-  viewModel: ConfigurationViewModel = viewModel()
+  viewModel: ConfigurationViewModel = viewModel(),
+  favoriteViewModel: FavoritePhotoViewModel = viewModel(
+    factory = FavoritePhotoViewModel.provideFactory()
+  )
 ) {
   val deleteMode by viewModel.deleteMode.collectAsState()
   val showSwipeButtons by viewModel.showSwipeButtons.collectAsState()
-
+  val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
   val recycleBinMode = deleteMode == DeleteMode.TRASH
   val context = LocalContext.current
 
@@ -246,10 +251,16 @@ fun ConfigurationScreen(
             SettingsOption(
               icon = Icons.Default.Favorite,
               title = "Quitar todas las favoritas",
-              subtitle = "Las fotos seguirán en tu teléfono, solo se quitará la marca de favorita.",
+              subtitle = if (favoritePhotos.isEmpty()) {
+                "No tienes fotos favoritas guardadas."
+              } else {
+                "Se quitará la marca de ${favoritePhotos.size} foto${if (favoritePhotos.size != 1) "s" else ""} favorita${if (favoritePhotos.size != 1) "s" else ""}."
+              },
               iconColor = SwipeFav,
               onClick = {
-                showClearFavoritesDialog = true
+                if (favoritePhotos.isNotEmpty()) {
+                  showClearFavoritesDialog = true
+                }
               }
             )
 
@@ -299,6 +310,7 @@ fun ConfigurationScreen(
         TextButton(
           onClick = {
             showClearFavoritesDialog = false
+            favoriteViewModel.clearFavoritePhotos()
           }
         ) {
           Text(

@@ -30,6 +30,7 @@ import com.example.pamelapp.ui.screens.swipescreen.components.PermissionDeniedSt
 import com.example.pamelapp.ui.screens.swipescreen.components.SwipeContent
 import com.example.pamelapp.ui.screens.swipescreen.components.SwipeTopBarActions
 import com.example.pamelapp.ui.theme.CreamWarm
+import com.example.pamelapp.ui.screens.swipescreen.components.ReviewSummaryCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -135,11 +136,13 @@ fun SwipeScreen(
         }
 
         state.currentIndex >= state.photos.size -> {
-          FinishedState(
-            deletedCount = state.deletedCount,
-            freedBytes = state.freedBytes,
+          ReviewSummaryCard(
+            totalPhotos = total,
+            favoriteCount = favoritePhotos.size,
             pendingDeleteCount = state.pendingDelete.size,
+            freedBytes = state.pendingDelete.sumOf { it.sizeBytes },
             onReviewDelete = navigateToDelete,
+            onViewFavorites = navigateToFavorites,
             onRestart = {
               swipeViewModel.restartReview()
             }
