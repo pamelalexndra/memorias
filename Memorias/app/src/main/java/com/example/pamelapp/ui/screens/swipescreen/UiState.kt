@@ -26,8 +26,5 @@ data class UiState(
     get() = deleteMode == DeleteMode.TRASH
   
   val availableYears: List<Int>
-    get() {
-      val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-      return (currentYear - 1 downTo 2010).toList()
-    }
+    get() = allPhotos.map { it.year }.distinct().sorted()
 }

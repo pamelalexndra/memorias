@@ -71,6 +71,8 @@ fun ConfigurationScreen(
   val showSwipeButtons by viewModel.showSwipeButtons.collectAsState()
   val logoutCompleted by viewModel.logoutCompleted.collectAsState()
   val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
+  val isDeletingAccount by viewModel.isDeletingAccount.collectAsState()
+  val deleteAccountError by viewModel.deleteAccountError.collectAsState()
   val recycleBinMode = deleteMode == DeleteMode.TRASH
 
   var showClearFavoritesDialog by remember { mutableStateOf(false) }
@@ -356,7 +358,8 @@ fun ConfigurationScreen(
           onClick = {
             viewModel.deleteAccount()
             showDeleteAccountDialog = false
-          }
+          },
+          enabled = !isDeletingAccount
         ) {
           Text(
             text = "Borrar cuenta",

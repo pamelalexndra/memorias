@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.pamelapp.BuildConfig
 import com.example.pamelapp.MemoriasApplication
 import com.example.pamelapp.R
 import com.example.pamelapp.data.repository.AuthRepository
@@ -79,7 +80,7 @@ class LoginViewModel(
 
       try {
         val googleIdOption = GetGoogleIdOption.Builder()
-          .setServerClientId(context.getString(R.string.default_web_client_id))
+          .setServerClientId(BuildConfig.TMDB_TOKEN)
           .setFilterByAuthorizedAccounts(false)
           .build()
 
@@ -104,7 +105,7 @@ class LoginViewModel(
       }
     }
   }
-
+  
   private suspend fun handleGoogleCredential(
     credential: Credential
   ) {
