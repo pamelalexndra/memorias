@@ -15,6 +15,11 @@ android {
   }
   
   defaultConfig {
+    buildConfigField(
+      "String",
+      "BACKEND_BASE_URL",
+      "\"https://memoriasbackend-production.up.railway.app\""
+    )
     applicationId = "com.example.pamelapp"
     minSdk = 24
     targetSdk = 36

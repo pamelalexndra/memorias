@@ -6,14 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pamelapp.MemoriasApplication
-import com.example.pamelapp.data.remote.AuthApiService
+import com.example.pamelapp.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
-  private val authApiService: AuthApiService
+  private val authRepository: AuthRepository
 ) : ViewModel() {
 
   private val _isLoading = MutableStateFlow(false)
@@ -50,8 +50,8 @@ class RegisterViewModel(
             _username.value.length >= 3 &&
             _password.value.length >= 6 &&
             _password.value == _confirmPassword.value &&
-            _emailAvailable.value == true &&
-            _usernameAvailable.value == true
+            _emailAvailable.value != false &&
+            _usernameAvailable.value != false
   }
 
   fun updateEmail(value: String) {
@@ -86,9 +86,9 @@ class RegisterViewModel(
     _error.update { null }
   }
 
-  fun checkEmailAvailability(email: String) {
+  private fun checkEmailAvailability(email: String) {
     viewModelScope.launch {
-      authApiService.checkEmailAvailability(email.trim())
+      authRepository.checkEmailAvailability(email.trim())
         .onSuccess { available ->
           _emailAvailable.update { available }
         }
@@ -98,9 +98,9 @@ class RegisterViewModel(
     }
   }
 
-  fun checkUsernameAvailability(username: String) {
+  private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
-      authApiService.checkUsernameAvailability(username.trim())
+      authRepository.checkUsernameAvailability(username.trim())
         .onSuccess { available ->
           _usernameAvailable.update { available }
         }
@@ -121,7 +121,7 @@ class RegisterViewModel(
         return@launch
       }
 
-      authApiService.register(
+      authRepository.register(
         email = _email.value.trim(),
         username = _username.value.trim(),
         password = _password.value
@@ -179,7 +179,7 @@ class RegisterViewModel(
         val app = this[APPLICATION_KEY] as MemoriasApplication
 
         RegisterViewModel(
-          authApiService = app.appProvider.authApiService
+          authRepository = app.appProvider.provideAuthRepository()
         )
       }
     }

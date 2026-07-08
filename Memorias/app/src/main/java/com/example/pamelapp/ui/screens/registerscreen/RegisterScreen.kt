@@ -22,9 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,18 +52,16 @@ fun RegisterScreen(
   val emailAvailable by viewModel.emailAvailable.collectAsState()
   val usernameAvailable by viewModel.usernameAvailable.collectAsState()
   val error by viewModel.error.collectAsState()
-  val isFormValid by remember {
-    derivedStateOf {
-      email.isNotBlank() &&
-              email.contains("@") &&
-              username.isNotBlank() &&
-              username.length >= 3 &&
-              password.length >= 6 &&
-              password == confirmPassword &&
-              emailAvailable == true &&
-              usernameAvailable == true
-    }
-  }
+
+  val isFormValid =
+    email.isNotBlank() &&
+            email.contains("@") &&
+            username.isNotBlank() &&
+            username.length >= 3 &&
+            password.length >= 6 &&
+            password == confirmPassword &&
+            emailAvailable != false &&
+            usernameAvailable != false
   
   LaunchedEffect(Unit) {
     viewModel.onSuccess.collect { success ->
@@ -102,8 +98,7 @@ fun RegisterScreen(
         PersonalInfoSection(
           email = email,
           emailAvailable = emailAvailable,
-          onEmailChange = { viewModel.updateEmail(it) },
-          onCheckEmailAvailability = { viewModel.checkEmailAvailability(it) }
+          onEmailChange = { viewModel.updateEmail(it) }
         )
         
         CredentialsSection(
@@ -113,8 +108,7 @@ fun RegisterScreen(
           usernameAvailable = usernameAvailable,
           onUsernameChange = { viewModel.updateUsername(it) },
           onPasswordChange = { viewModel.updatePassword(it) },
-          onConfirmPasswordChange = { viewModel.updateConfirmPassword(it) },
-          onCheckUsernameAvailability = { viewModel.checkUsernameAvailability(it) }
+          onConfirmPasswordChange = { viewModel.updateConfirmPassword(it) }
         )
         
         if (password.isNotEmpty()) {
@@ -130,7 +124,25 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth()
           )
         }
-        
+
+        if (!isFormValid && error == null) {
+          Text(
+            text = when {
+              email.isBlank() || !email.contains("@") -> "Ingresa un correo válido."
+              username.length < 3 -> "El usuario debe tener al menos 3 caracteres."
+              password.length < 6 -> "La contraseña debe tener al menos 6 caracteres."
+              password != confirmPassword -> "Las contraseñas no coinciden."
+              emailAvailable == false -> "Ese correo no está disponible."
+              usernameAvailable == false -> "Ese usuario no está disponible."
+              else -> ""
+            },
+            color = BrownMid,
+            fontSize = 13.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+
         Button(
           onClick = { viewModel.onRegisterClick() },
           modifier = Modifier.fillMaxWidth(),

@@ -43,8 +43,7 @@ fun CredentialsSection(
   usernameAvailable: Boolean?,
   onUsernameChange: (String) -> Unit,
   onPasswordChange: (String) -> Unit,
-  onConfirmPasswordChange: (String) -> Unit,
-  onCheckUsernameAvailability: (String) -> Unit
+  onConfirmPasswordChange: (String) -> Unit
 ) {
   var showPassword by remember { mutableStateOf(false) }
   var showConfirmPassword by remember { mutableStateOf(false) }

@@ -2,7 +2,9 @@ package com.example.pamelapp.ui.screens.configscreen
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.example.pamelapp.MemoriasApplication
 import com.example.pamelapp.data.preferences.SwipePreferences
+import com.example.pamelapp.data.repository.AuthRepository
 import com.example.pamelapp.domain.model.DeleteMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,15 +14,22 @@ class ConfigurationViewModel(
   application: Application
 ) : AndroidViewModel(application) {
 
-  private val preferences = SwipePreferences(
-    application.applicationContext
-  )
+  private val appProvider = (application as MemoriasApplication).appProvider
+
+  private val preferences: SwipePreferences =
+    appProvider.provideSwipePreferences()
+
+  private val authRepository: AuthRepository =
+    appProvider.provideAuthRepository()
 
   private val _deleteMode = MutableStateFlow(DeleteMode.TRASH)
   val deleteMode = _deleteMode.asStateFlow()
 
   private val _showSwipeButtons = MutableStateFlow(true)
   val showSwipeButtons = _showSwipeButtons.asStateFlow()
+
+  private val _logoutCompleted = MutableStateFlow(false)
+  val logoutCompleted = _logoutCompleted.asStateFlow()
 
   fun loadSettings() {
     _deleteMode.update {
@@ -53,6 +62,16 @@ class ConfigurationViewModel(
   }
 
   fun logout() {
-    // Pendiente
+    authRepository.logout()
+
+    _logoutCompleted.update {
+      true
+    }
+  }
+
+  fun resetLogoutState() {
+    _logoutCompleted.update {
+      false
+    }
   }
 }

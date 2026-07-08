@@ -25,7 +25,7 @@ data class AuthResponse(
     val accessToken: String,
     val refreshToken: String? = null,
     val userId: String? = null,
-    val email: String,
+    val email: String? = null,
     val displayName: String? = null
 )
 
@@ -40,4 +40,20 @@ data class RegisterResponse(
 @Serializable
 data class AvailabilityResponse(
     val available: Boolean
+)
+
+@Serializable
+data class UserResponse(
+    val userId: String? = null,
+    val email: String? = null,
+    val username: String? = null
+)
+
+@Serializable
+data class ApiErrorResponse(
+    val title: String? = null,
+    val detail: String? = null,
+    val status: Int? = null,
+    val message: String? = null,
+    val error: String? = null
 )

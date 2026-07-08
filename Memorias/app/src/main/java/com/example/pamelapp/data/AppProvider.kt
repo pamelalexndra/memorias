@@ -4,13 +4,16 @@ import android.content.Context
 import com.example.pamelapp.data.database.AppDatabase
 import com.example.pamelapp.data.preferences.SwipePreferences
 import com.example.pamelapp.data.remote.AuthApiService
+import com.example.pamelapp.data.repository.AuthRepository
 import com.example.pamelapp.domain.repository.favoritePhotoRepository.FavoritePhotoRepository
 import com.example.pamelapp.domain.repository.favoritePhotoRepository.FavoritePhotoRepositoryImpl
 
-class AppProvider(context: Context) {
-
+class AppProvider(
+  context: Context
+) {
   private val appContext = context.applicationContext
-  private val appDatabase = AppDatabase.getDatabase(context)
+
+  private val appDatabase = AppDatabase.getDatabase(appContext)
 
   private val favoritePhotoDAO = appDatabase.favoritePhotoDAO()
 
@@ -18,7 +21,13 @@ class AppProvider(context: Context) {
     FavoritePhotoRepositoryImpl(favoritePhotoDAO)
 
   private val swipePreferences = SwipePreferences(appContext)
-  val authApiService: AuthApiService = AuthApiService()
+
+  private val authApiService = AuthApiService()
+
+  private val authRepository = AuthRepository(
+    authApiService = authApiService,
+    preferences = swipePreferences
+  )
 
   fun provideFavoritePhotoRepository(): FavoritePhotoRepository {
     return favoritePhotoRepository
@@ -28,4 +37,7 @@ class AppProvider(context: Context) {
     return swipePreferences
   }
 
+  fun provideAuthRepository(): AuthRepository {
+    return authRepository
+  }
 }

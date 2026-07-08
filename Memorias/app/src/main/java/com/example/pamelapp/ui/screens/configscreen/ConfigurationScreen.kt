@@ -61,6 +61,7 @@ import com.example.pamelapp.ui.screens.favoritesscreen.FavoritePhotoViewModel
 @Composable
 fun ConfigurationScreen(
   navigateToBack: () -> Unit,
+  navigateToLogin: () -> Unit,
   viewModel: ConfigurationViewModel = viewModel(),
   favoriteViewModel: FavoritePhotoViewModel = viewModel(
     factory = FavoritePhotoViewModel.provideFactory()
@@ -68,6 +69,7 @@ fun ConfigurationScreen(
 ) {
   val deleteMode by viewModel.deleteMode.collectAsState()
   val showSwipeButtons by viewModel.showSwipeButtons.collectAsState()
+  val logoutCompleted by viewModel.logoutCompleted.collectAsState()
   val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
   val recycleBinMode = deleteMode == DeleteMode.TRASH
 
@@ -77,6 +79,13 @@ fun ConfigurationScreen(
 
   LaunchedEffect(Unit) {
     viewModel.loadSettings()
+  }
+
+  LaunchedEffect(logoutCompleted) {
+    if (logoutCompleted) {
+      viewModel.resetLogoutState()
+      navigateToLogin()
+    }
   }
 
   AppScaffold(
@@ -366,7 +375,6 @@ fun ConfigurationScreen(
       }
     )
   }
-
   if (showLogoutDialog) {
     AlertDialog(
       onDismissRequest = {
@@ -381,8 +389,8 @@ fun ConfigurationScreen(
       confirmButton = {
         TextButton(
           onClick = {
-            viewModel.logout()
             showLogoutDialog = false
+            viewModel.logout()
           }
         ) {
           Text(text = "Cerrar sesión")

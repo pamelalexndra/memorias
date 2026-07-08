@@ -20,8 +20,7 @@ import com.example.pamelapp.ui.theme.*
 fun PersonalInfoSection(
   email: String,
   emailAvailable: Boolean?,
-  onEmailChange: (String) -> Unit,
-  onCheckEmailAvailability: (String) -> Unit
+  onEmailChange: (String) -> Unit
 ) {
   Card(
     colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),

@@ -47,7 +47,7 @@ class SwipePreferences(
     fun saveAuthSession(
         accessToken: String,
         refreshToken: String?,
-        email: String,
+        email: String?,
         displayName: String?
     ) {
         prefs.edit {
@@ -62,8 +62,16 @@ class SwipePreferences(
         return prefs.getString(authTokenKey, null)
     }
 
+    fun getUserEmail(): String? {
+        return prefs.getString(userEmailKey, null)
+    }
+
+    fun getUserDisplayName(): String? {
+        return prefs.getString(userDisplayNameKey, null)
+    }
+
     fun isLoggedIn(): Boolean {
-        return getAuthToken() != null
+        return !getAuthToken().isNullOrBlank()
     }
 
     fun clearAuthSession() {

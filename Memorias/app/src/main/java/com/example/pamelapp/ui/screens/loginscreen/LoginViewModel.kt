@@ -13,9 +13,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pamelapp.MemoriasApplication
 import com.example.pamelapp.R
-import com.example.pamelapp.data.preferences.SwipePreferences
-import com.example.pamelapp.data.remote.AuthApiService
-import com.example.pamelapp.data.remote.dto.AuthResponse
+import com.example.pamelapp.data.repository.AuthRepository
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -24,8 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-  private val authApiService: AuthApiService,
-  private val preferences: SwipePreferences
+  private val authRepository: AuthRepository
 ) : ViewModel() {
 
   private val _isLoading = MutableStateFlow(false)
@@ -60,11 +57,11 @@ class LoginViewModel(
       _isLoading.value = true
       _error.value = null
 
-      authApiService.login(
+      authRepository.login(
         email = cleanEmail,
         password = password
-      ).onSuccess { response ->
-        saveSession(response)
+      ).onSuccess {
+        _onSuccess.value = true
       }.onFailure { exception ->
         _error.value = exception.message ?: "No se pudo iniciar sesión."
       }
@@ -115,9 +112,9 @@ class LoginViewModel(
       val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
       val idToken = googleIdTokenCredential.idToken
 
-      authApiService.loginWithGoogle(idToken)
-        .onSuccess { response ->
-          saveSession(response)
+      authRepository.loginWithGoogle(idToken)
+        .onSuccess {
+          _onSuccess.value = true
         }
         .onFailure { exception ->
           _error.value = exception.message ?: "No se pudo iniciar sesión con Google."
@@ -125,26 +122,6 @@ class LoginViewModel(
     } else {
       _error.value = "Tipo de credencial no soportado."
     }
-  }
-
-  private fun saveSession(
-    response: AuthResponse
-  ) {
-    val accessToken = response.accessToken
-
-    if (accessToken.isBlank()) {
-      _error.value = "El servidor no devolvió un token válido."
-      return
-    }
-
-    preferences.saveAuthSession(
-      accessToken = accessToken,
-      refreshToken = response.refreshToken,
-      email = response.email,
-      displayName = response.displayName
-    )
-
-    _onSuccess.value = true
   }
 
   fun resetSuccess() {
@@ -157,8 +134,7 @@ class LoginViewModel(
         val app = this[APPLICATION_KEY] as MemoriasApplication
 
         LoginViewModel(
-          authApiService = app.appProvider.authApiService,
-          preferences = app.appProvider.provideSwipePreferences()
+          authRepository = app.appProvider.provideAuthRepository()
         )
       }
     }
