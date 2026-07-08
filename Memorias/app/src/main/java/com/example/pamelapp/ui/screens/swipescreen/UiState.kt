@@ -3,11 +3,13 @@ package com.example.pamelapp.ui.screens.swipescreen
 import com.example.pamelapp.domain.model.DeleteMode
 import com.example.pamelapp.domain.model.Photo
 import com.example.pamelapp.ui.navigation.Screen
+import java.util.Calendar
 
 data class UiState(
   val loading: Boolean = true,
   val permissionDenied: Boolean = false,
   val photos: List<Photo> = emptyList(),
+  val allPhotos: List<Photo> = emptyList(),
   val favoritePhotos: List<Photo> = emptyList(),
   val currentIndex: Int = 0,
   val pendingDelete: List<Photo> = emptyList(),
@@ -18,7 +20,14 @@ data class UiState(
   val error: String? = null,
   val deleteMode: DeleteMode = DeleteMode.TRASH,
   val showSwipeButtons: Boolean = true,
+  val selectedYear: Int? = null,
 ) {
   val recycleBinMode: Boolean
     get() = deleteMode == DeleteMode.TRASH
+  
+  val availableYears: List<Int>
+    get() {
+      val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+      return (currentYear - 1 downTo 2010).toList()
+    }
 }

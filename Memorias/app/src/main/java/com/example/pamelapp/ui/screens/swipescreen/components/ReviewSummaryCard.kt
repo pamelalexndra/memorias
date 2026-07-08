@@ -42,204 +42,204 @@ import com.example.pamelapp.ui.theme.SwipeKeep
 
 @Composable
 fun ReviewSummaryCard(
-    totalPhotos: Int,
-    favoriteCount: Int,
-    pendingDeleteCount: Int,
-    freedBytes: Long,
-    onReviewDelete: () -> Unit,
-    onViewFavorites: () -> Unit,
-    onRestart: () -> Unit,
-    modifier: Modifier = Modifier
+  totalPhotos: Int,
+  favoriteCount: Int,
+  pendingDeleteCount: Int,
+  freedBytes: Long,
+  onReviewDelete: () -> Unit,
+  onViewFavorites: () -> Unit,
+  onRestart: () -> Unit,
+  modifier: Modifier = Modifier
 ) {
-    val formattedSelectedSpace = freedBytes.formatBytesForSummary()
-
-    ElevatedCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 6.dp
-        )
+  val formattedSelectedSpace = freedBytes.formatBytesForSummary()
+  
+  ElevatedCard(
+    modifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = 20.dp),
+    shape = RoundedCornerShape(24.dp),
+    colors = CardDefaults.elevatedCardColors(
+      containerColor = Color.White
+    ),
+    elevation = CardDefaults.elevatedCardElevation(
+      defaultElevation = 6.dp
+    )
+  ) {
+    Column(
+      modifier = Modifier
+          .fillMaxWidth()
+          .padding(22.dp),
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = SwipeKeep.copy(alpha = 0.14f),
-                        shape = CircleShape
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = SwipeKeep
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Text(
-                text = "Revisión completada",
-                color = CharcoalWarm,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+      Box(
+        modifier = Modifier
+            .background(
+                color = SwipeKeep.copy(alpha = 0.14f),
+                shape = CircleShape
             )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "¡Terminaste de revisar las memorias de este día!.",
-                color = BrownMid,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+      ) {
+        Icon(
+          imageVector = Icons.Default.CheckCircle,
+          contentDescription = null,
+          tint = SwipeKeep
+        )
+      }
+      
+      Spacer(modifier = Modifier.height(14.dp))
+      
+      Text(
+        text = "Revisión completada",
+        color = CharcoalWarm,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center
+      )
+      
+      Spacer(modifier = Modifier.height(6.dp))
+      
+      Text(
+        text = "¡Terminaste de revisar las memorias de este día!.",
+        color = BrownMid,
+        fontSize = 13.sp,
+        textAlign = TextAlign.Center
+      )
+      
+      Spacer(modifier = Modifier.height(22.dp))
+      
+      Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color(0xFFF9F3EC),
+                shape = RoundedCornerShape(18.dp)
             )
-
-            Spacer(modifier = Modifier.height(22.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0xFFF9F3EC),
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                SummaryRow(
-                    icon = Icons.Default.PhotoLibrary,
-                    label = "Fotos revisadas",
-                    value = totalPhotos.toString(),
-                    color = CharcoalWarm
-                )
-
-                HorizontalDivider(
-                    color = BrownMid.copy(alpha = 0.12f)
-                )
-
-                SummaryRow(
-                    icon = Icons.Default.Favorite,
-                    label = "Favoritas guardadas",
-                    value = favoriteCount.toString(),
-                    color = SwipeFav
-                )
-
-                HorizontalDivider(
-                    color = BrownMid.copy(alpha = 0.12f)
-                )
-
-                SummaryRow(
-                    icon = Icons.Default.Delete,
-                    label = "Pendientes por borrar",
-                    value = pendingDeleteCount.toString(),
-                    color = SwipeDelete
-                )
-
-                HorizontalDivider(
-                    color = BrownMid.copy(alpha = 0.12f)
-                )
-
-                SummaryRow(
-                    icon = Icons.Default.Storage,
-                    label = "Espacio liberado",
-                    value = if (pendingDeleteCount > 0) formattedSelectedSpace else "0 B",
-                    color = SwipeKeep
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedButton(
-                onClick = onRestart,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.RestartAlt,
-                    contentDescription = null
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Volver a revisar"
-                )
-            }
-        }
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+      ) {
+        SummaryRow(
+          icon = Icons.Default.PhotoLibrary,
+          label = "Fotos revisadas",
+          value = totalPhotos.toString(),
+          color = CharcoalWarm
+        )
+        
+        HorizontalDivider(
+          color = BrownMid.copy(alpha = 0.12f)
+        )
+        
+        SummaryRow(
+          icon = Icons.Default.Favorite,
+          label = "Favoritas guardadas",
+          value = favoriteCount.toString(),
+          color = SwipeFav
+        )
+        
+        HorizontalDivider(
+          color = BrownMid.copy(alpha = 0.12f)
+        )
+        
+        SummaryRow(
+          icon = Icons.Default.Delete,
+          label = "Pendientes por borrar",
+          value = pendingDeleteCount.toString(),
+          color = SwipeDelete
+        )
+        
+        HorizontalDivider(
+          color = BrownMid.copy(alpha = 0.12f)
+        )
+        
+        SummaryRow(
+          icon = Icons.Default.Storage,
+          label = "Espacio liberado",
+          value = if (pendingDeleteCount > 0) formattedSelectedSpace else "0 B",
+          color = SwipeKeep
+        )
+      }
+      
+      Spacer(modifier = Modifier.height(20.dp))
+      
+      
+      Spacer(modifier = Modifier.height(10.dp))
+    }
+    
+    Spacer(modifier = Modifier.height(10.dp))
+    
+    OutlinedButton(
+      onClick = onRestart,
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(14.dp)
+    ) {
+      Icon(
+        imageVector = Icons.Default.RestartAlt,
+        contentDescription = null
+      )
+      
+      Spacer(modifier = Modifier.width(8.dp))
+      
+      Text(
+        text = "Volver a revisar"
+      )
+    }
+  }
 }
 
 @Composable
 private fun SummaryRow(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    color: Color
+  icon: ImageVector,
+  label: String,
+  value: String,
+  color: Color
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically
+  Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 9.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Box(
+      modifier = Modifier
+          .background(
+              color = color.copy(alpha = 0.12f),
+              shape = CircleShape
+          )
+          .padding(8.dp),
+      contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = color.copy(alpha = 0.12f),
-                    shape = CircleShape
-                )
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = label,
-            color = CharcoalWarm,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-
-        Text(
-            text = value,
-            color = color,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.End
-        )
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = color
+      )
     }
+    
+    Spacer(modifier = Modifier.width(12.dp))
+    
+    Text(
+      text = label,
+      color = CharcoalWarm,
+      fontSize = 14.sp,
+      fontWeight = FontWeight.Medium,
+      modifier = Modifier.weight(1f)
+    )
+    
+    Text(
+      text = value,
+      color = color,
+      fontSize = 16.sp,
+      fontWeight = FontWeight.Bold,
+      textAlign = TextAlign.End
+    )
+  }
 }
 
 private fun Long.formatBytesForSummary(): String {
-    return when {
-        this >= 1_073_741_824L -> "%.2f GB".format(this / 1_073_741_824f)
-        this >= 1_048_576L -> "%.1f MB".format(this / 1_048_576f)
-        this >= 1_024L -> "${this / 1_024} KB"
-        else -> "$this B"
-    }
+  return when {
+    this >= 1_073_741_824L -> "%.2f GB".format(this / 1_073_741_824f)
+    this >= 1_048_576L -> "%.1f MB".format(this / 1_048_576f)
+    this >= 1_024L -> "${this / 1_024} KB"
+    else -> "$this B"
+  }
 }

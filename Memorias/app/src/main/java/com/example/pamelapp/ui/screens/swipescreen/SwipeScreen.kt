@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import com.example.pamelapp.ui.screens.swipescreen.components.SwipeContent
 import com.example.pamelapp.ui.screens.swipescreen.components.SwipeTopBarActions
 import com.example.pamelapp.ui.theme.CreamWarm
 import com.example.pamelapp.ui.screens.swipescreen.components.ReviewSummaryCard
+import com.example.pamelapp.ui.screens.swipescreen.components.YearFilterChips
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -48,17 +50,17 @@ fun SwipeScreen(
   val favoritePhotosIds by favoriteViewModel.favoritePhotosIds.collectAsStateWithLifecycle()
   val state by swipeViewModel.state.collectAsState()
   val context = LocalContext.current
-
+  
   LaunchedEffect(favoritePhotosIds) {
     swipeViewModel.syncFavoriteIds(favoritePhotosIds)
   }
-
+  
   val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
     Manifest.permission.READ_MEDIA_IMAGES
   } else {
     Manifest.permission.READ_EXTERNAL_STORAGE
   }
-
+  
   val permissionLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.RequestPermission()
   ) { granted ->
@@ -70,13 +72,13 @@ fun SwipeScreen(
       swipeViewModel.setPermissionDenied()
     }
   }
-
+  
   LaunchedEffect(Unit) {
     val alreadyGranted = ContextCompat.checkSelfPermission(
       context,
       permission
     ) == PackageManager.PERMISSION_GRANTED
-
+    
     if (alreadyGranted) {
       swipeViewModel.loadSettings()
       swipeViewModel.loadPhotos()
@@ -85,11 +87,11 @@ fun SwipeScreen(
       permissionLauncher.launch(permission)
     }
   }
-
+  
   val total = state.photos.size
   val current = (state.currentIndex + 1).coerceAtMost(total)
   val photo = state.photos.getOrNull(state.currentIndex)
-
+  
   AppScaffold(
     title = "Memorias",
     actions = {
@@ -116,11 +118,11 @@ fun SwipeScreen(
         state.loading -> {
           LoadingState()
         }
-
+        
         state.permissionDenied -> {
           PermissionDeniedState()
         }
-
+        
         state.error != null -> {
           ErrorState(
             message = state.error ?: "Ocurrió un error",
@@ -130,45 +132,107 @@ fun SwipeScreen(
             }
           )
         }
-
-        state.photos.isEmpty() -> {
-          EmptyDayCard()
+        
+        state.photos.isEmpty() -> Column(
+          modifier = Modifier.fillMaxSize(),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          if (state.availableYears.isNotEmpty()) {
+            YearFilterChips(
+              availableYears = state.availableYears,
+              selectedYear = state.selectedYear,
+              onYearSelected = { year ->
+                swipeViewModel.filterByYear(year)
+              },
+              modifier = Modifier
+            )
+          }
+          
+          Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+          ) {
+            EmptyDayCard()
+          }
         }
-
+        
+        
         state.currentIndex >= state.photos.size -> {
-          ReviewSummaryCard(
-            totalPhotos = total,
-            favoriteCount = favoritePhotos.size,
-            pendingDeleteCount = state.pendingDelete.size,
-            freedBytes = state.pendingDelete.sumOf { it.sizeBytes },
-            onReviewDelete = navigateToDelete,
-            onViewFavorites = navigateToFavorites,
-            onRestart = {
-              swipeViewModel.restartReview()
+          Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            if (state.availableYears.isNotEmpty()) {
+              YearFilterChips(
+                availableYears = state.availableYears,
+                selectedYear = state.selectedYear,
+                onYearSelected = { year ->
+                  swipeViewModel.filterByYear(year)
+                },
+                modifier = Modifier
+              )
             }
-          )
+            
+            Box(
+              modifier = Modifier.weight(1f),
+              contentAlignment = Alignment.Center
+            ) {
+              ReviewSummaryCard(
+                totalPhotos = state.allPhotos.size,
+                favoriteCount = favoritePhotos.size,
+                pendingDeleteCount = state.pendingDelete.size,
+                freedBytes = state.pendingDelete.sumOf { it.sizeBytes },
+                onReviewDelete = navigateToDelete,
+                onViewFavorites = navigateToFavorites,
+                onRestart = {
+                  swipeViewModel.restartReview()
+                }
+              )
+            }
+          }
         }
-
+        
         photo != null -> {
           val isFavorite = photo.id in favoritePhotosIds
-
-          SwipeContent(
-            photo = photo,
-            isFavorite = isFavorite,
-            showActionButtons = state.showSwipeButtons,
-            onKeep = {
-              swipeViewModel.onKeep()
-            },
-            onFavorite = {
-              swipeViewModel.onFavorite()
-            },
-            onDelete = {
-              swipeViewModel.onDelete()
-            },
-            onUndoLastAction = {
-              swipeViewModel.undoLastSwipeAction()
+          
+          Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            if (state.availableYears.isNotEmpty()) {
+              YearFilterChips(
+                availableYears = state.availableYears,
+                selectedYear = state.selectedYear,
+                onYearSelected = { year ->
+                  swipeViewModel.filterByYear(year)
+                },
+                modifier = Modifier
+              )
             }
-          )
+            
+            Box(
+              modifier = Modifier.weight(1f),
+              contentAlignment = Alignment.Center
+            ) {
+              SwipeContent(
+                photo = photo,
+                isFavorite = isFavorite,
+                showActionButtons = state.showSwipeButtons,
+                onKeep = {
+                  swipeViewModel.onKeep()
+                },
+                onFavorite = {
+                  swipeViewModel.onFavorite()
+                },
+                onDelete = {
+                  swipeViewModel.onDelete()
+                },
+                onUndoLastAction = {
+                  swipeViewModel.undoLastSwipeAction()
+                }
+              )
+            }
+          }
         }
       }
     }
