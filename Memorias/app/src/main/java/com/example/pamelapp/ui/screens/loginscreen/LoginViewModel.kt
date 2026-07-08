@@ -1,129 +1,166 @@
 package com.example.pamelapp.ui.screens.loginscreen
 
 import android.content.Context
-import android.util.Log
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.pamelapp.MemoriasApplication
 import com.example.pamelapp.R
+import com.example.pamelapp.data.preferences.SwipePreferences
+import com.example.pamelapp.data.remote.AuthApiService
+import com.example.pamelapp.data.remote.dto.AuthResponse
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
-class LoginViewModel : ViewModel() {
-  
-  private val auth: FirebaseAuth by lazy {
-    try {
-      FirebaseAuth.getInstance()
-    } catch (e: Exception) {
-      Log.e("LoginViewModel", "Firebase no inicializado", e)
-      throw IllegalStateException("FirebaseApp no inicializado. Asegúrate de llamar a FirebaseApp.initializeApp()")
-    }
-  }
-  
+class LoginViewModel(
+  private val authApiService: AuthApiService,
+  private val preferences: SwipePreferences
+) : ViewModel() {
+
+  private val _isLoading = MutableStateFlow(false)
+  val isLoading = _isLoading.asStateFlow()
+
   private val _isGoogleSignInLoading = MutableStateFlow(false)
   val isGoogleSignInLoading = _isGoogleSignInLoading.asStateFlow()
-  
+
   private val _error = MutableStateFlow<String?>(null)
   val error = _error.asStateFlow()
-  
+
   private val _onSuccess = MutableStateFlow(false)
   val onSuccess = _onSuccess.asStateFlow()
-  
-  private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
-  val currentUser = _currentUser.asStateFlow()
-  
-  init {
-    try {
-      FirebaseApp.getInstance()
-      Log.d("LoginViewModel", "Firebase inicializado correctamente")
-    } catch (e: Exception) {
-      Log.e("LoginViewModel", "Firebase NO inicializado", e)
+
+  fun onLoginClick(
+    email: String,
+    password: String
+  ) {
+    val cleanEmail = email.trim()
+
+    if (cleanEmail.isBlank() || !cleanEmail.contains("@")) {
+      _error.value = "Ingresa un correo válido."
+      return
+    }
+
+    if (password.length < 6) {
+      _error.value = "La contraseña debe tener al menos 6 caracteres."
+      return
+    }
+
+    viewModelScope.launch {
+      _isLoading.value = true
+      _error.value = null
+
+      authApiService.login(
+        email = cleanEmail,
+        password = password
+      ).onSuccess { response ->
+        saveSession(response)
+      }.onFailure { exception ->
+        _error.value = exception.message ?: "No se pudo iniciar sesión."
+      }
+
+      _isLoading.value = false
     }
   }
-  
-  fun onGoogleSignInClick(context: Context) {
+
+  fun onGoogleSignInClick(
+    context: Context
+  ) {
     viewModelScope.launch {
       _isGoogleSignInLoading.value = true
       _error.value = null
-      
+
       try {
         val googleIdOption = GetGoogleIdOption.Builder()
           .setServerClientId(context.getString(R.string.default_web_client_id))
           .setFilterByAuthorizedAccounts(false)
           .build()
-        
+
         val request = GetCredentialRequest.Builder()
           .addCredentialOption(googleIdOption)
           .build()
-        
+
         val credentialManager = CredentialManager.create(context)
+
         val result = credentialManager.getCredential(
           context = context,
           request = request
         )
-        
-        handleCredentialResult(result.credential)
-        
-      } catch (e: GetCredentialException) {
-        Log.e("LoginViewModel", "Error al obtener credencial de Google: ${e.message}", e)
-        _error.value = "Error de configuración de Google: ${e.message}"
-        _isGoogleSignInLoading.value = false
-      } catch (e: Exception) {
-        Log.e("LoginViewModel", "Error inesperado: ${e.message}", e)
-        _error.value = "Error inesperado: ${e.message}"
-        _isGoogleSignInLoading.value = false
-      }
-    }
-  }
-  
-  private suspend fun handleCredentialResult(credential: Credential) {
-    if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-      try {
-        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-        firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
-      } catch (e: Exception) {
 
-        _error.value = "Error al procesar la credencial"
+        handleGoogleCredential(result.credential)
+      } catch (exception: GetCredentialException) {
+        _error.value = "No se pudo obtener la cuenta de Google."
+      } catch (exception: Exception) {
+        _error.value = exception.message ?: "Error inesperado con Google."
+      } finally {
         _isGoogleSignInLoading.value = false
       }
+    }
+  }
+
+  private suspend fun handleGoogleCredential(
+    credential: Credential
+  ) {
+    if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+      val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+      val idToken = googleIdTokenCredential.idToken
+
+      authApiService.loginWithGoogle(idToken)
+        .onSuccess { response ->
+          saveSession(response)
+        }
+        .onFailure { exception ->
+          _error.value = exception.message ?: "No se pudo iniciar sesión con Google."
+        }
     } else {
-      _error.value = "Tipo de credencial no soportado"
-      _isGoogleSignInLoading.value = false
+      _error.value = "Tipo de credencial no soportado."
     }
   }
-  
-  private suspend fun firebaseAuthWithGoogle(idToken: String) {
-    try {
-      val credential = GoogleAuthProvider.getCredential(idToken, null)
-      val authResult = auth.signInWithCredential(credential).await()
-      
-      if (authResult.user != null) {
-        _currentUser.value = authResult.user
-        _onSuccess.value = true
-      } else {
-        _error.value = "Falló la autenticación con Firebase"
-      }
-    } catch (e: Exception) {
-      _error.value = "Falló la autenticación"
-    } finally {
-      _isGoogleSignInLoading.value = false
+
+  private fun saveSession(
+    response: AuthResponse
+  ) {
+    val accessToken = response.accessToken
+
+    if (accessToken.isBlank()) {
+      _error.value = "El servidor no devolvió un token válido."
+      return
     }
+
+    preferences.saveAuthSession(
+      accessToken = accessToken,
+      refreshToken = response.refreshToken,
+      email = response.email,
+      displayName = response.displayName
+    )
+
+    _onSuccess.value = true
   }
-  
+
   fun resetSuccess() {
     _onSuccess.value = false
+  }
+
+  companion object {
+    fun provideFactory() = viewModelFactory {
+      initializer {
+        val app = this[APPLICATION_KEY] as MemoriasApplication
+
+        LoginViewModel(
+          authApiService = app.appProvider.authApiService,
+          preferences = app.appProvider.provideSwipePreferences()
+        )
+      }
+    }
   }
 }

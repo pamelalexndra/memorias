@@ -1,19 +1,16 @@
 package com.example.pamelapp.ui.screens.loginscreen
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -23,6 +20,7 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -44,37 +42,52 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pamelapp.ui.scaffold.AppScaffold
-import com.example.pamelapp.ui.theme.*
+import com.example.pamelapp.ui.theme.BrownMid
+import com.example.pamelapp.ui.theme.CharcoalWarm
+import com.example.pamelapp.ui.theme.CreamWarm
+import com.example.pamelapp.ui.theme.Siena
 
-@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun LoginScreen(
   navigateToBack: () -> Unit,
   navigateToRegister: () -> Unit,
   navigateToSwipe: () -> Unit,
-  viewModel: LoginViewModel = viewModel()
+  viewModel: LoginViewModel = viewModel(
+    factory = LoginViewModel.provideFactory()
+  )
 ) {
-  
+  var email by remember { mutableStateOf("") }
+  var password by remember { mutableStateOf("") }
+  var passwordVisible by remember { mutableStateOf(false) }
+
+  val isLoading by viewModel.isLoading.collectAsState()
   val isGoogleSignInLoading by viewModel.isGoogleSignInLoading.collectAsState()
   val error by viewModel.error.collectAsState()
   val onSuccess by viewModel.onSuccess.collectAsState()
+
   val context = LocalContext.current
-  
-  LaunchedEffect(Unit) {
-    viewModel.onSuccess.collect { success ->
-      if (success) navigateToSwipe()
+
+  LaunchedEffect(onSuccess) {
+    if (onSuccess) {
+      viewModel.resetSuccess()
+      navigateToSwipe()
     }
   }
-  
+
   AppScaffold(
     title = "Iniciar sesión",
     navigationIcon = {
-      IconButton(onClick = { navigateToBack() }) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+      IconButton(onClick = navigateToBack) {
+        Icon(
+          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+          contentDescription = "Volver",
+          tint = Color.White
+        )
       }
     }
   ) { paddingValues ->
@@ -82,37 +95,148 @@ fun LoginScreen(
       modifier = Modifier
         .fillMaxSize()
         .background(CreamWarm)
-        .padding(paddingValues),
+        .padding(paddingValues)
+        .padding(horizontal = 20.dp),
       contentAlignment = Alignment.Center
     ) {
       Column(
-        modifier = Modifier.width(300.dp),
+        modifier = Modifier
+          .widthIn(max = 380.dp)
+          .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
       ) {
-        
-        Button(
-          onClick = { navigateToSwipe() },
+        Text(
+          text = "Bienvenida de nuevo",
+          color = CharcoalWarm,
+          fontSize = 24.sp,
+          fontWeight = FontWeight.Bold,
+          textAlign = TextAlign.Center
+        )
+
+        Text(
+          text = "Ingresa con tu cuenta para continuar.",
+          color = BrownMid,
+          fontSize = 14.sp,
+          textAlign = TextAlign.Center
+        )
+
+        OutlinedTextField(
+          value = email,
+          onValueChange = { email = it },
+          label = {
+            Text("Correo electrónico")
+          },
           modifier = Modifier.fillMaxWidth(),
-          colors = ButtonDefaults.buttonColors(containerColor = Siena),
-        ) {
-          
-          Text(
-            "Iniciar sesión",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold
+          singleLine = true,
+          keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+          ),
+          colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Siena,
+            focusedLabelColor = CharcoalWarm,
+            unfocusedLabelColor = BrownMid,
+            focusedTextColor = CharcoalWarm,
+            unfocusedTextColor = CharcoalWarm
           )
-        }
-        
+        )
+
+        OutlinedTextField(
+          value = password,
+          onValueChange = { password = it },
+          label = {
+            Text("Contraseña")
+          },
+          modifier = Modifier.fillMaxWidth(),
+          singleLine = true,
+          visualTransformation = if (passwordVisible) {
+            VisualTransformation.None
+          } else {
+            PasswordVisualTransformation()
+          },
+          trailingIcon = {
+            IconButton(
+              onClick = {
+                passwordVisible = !passwordVisible
+              }
+            ) {
+              Icon(
+                imageVector = if (passwordVisible) {
+                  Icons.Outlined.VisibilityOff
+                } else {
+                  Icons.Outlined.Visibility
+                },
+                contentDescription = null,
+                tint = BrownMid
+              )
+            }
+          },
+          keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+          ),
+          colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Siena,
+            focusedLabelColor = CharcoalWarm,
+            unfocusedLabelColor = BrownMid,
+            focusedTextColor = CharcoalWarm,
+            unfocusedTextColor = CharcoalWarm
+          )
+        )
+
         Button(
-          onClick = { viewModel.onGoogleSignInClick(context) },
+          onClick = {
+            viewModel.onLoginClick(
+              email = email,
+              password = password
+            )
+          },
           modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-          shape = RoundedCornerShape(28.dp),
-          enabled = !isGoogleSignInLoading
+            .height(52.dp),
+          enabled = !isLoading &&
+                  !isGoogleSignInLoading &&
+                  email.isNotBlank() &&
+                  password.length >= 6,
+          colors = ButtonDefaults.buttonColors(
+            containerColor = Siena,
+            disabledContainerColor = BrownMid
+          ),
+          shape = RoundedCornerShape(14.dp)
+        ) {
+          if (isLoading) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(20.dp),
+              color = Color.White
+            )
+          } else {
+            Text(
+              text = "Iniciar sesión",
+              color = Color.White,
+              fontSize = 16.sp,
+              fontWeight = FontWeight.SemiBold
+            )
+          }
+        }
+
+        HorizontalDivider(
+          color = BrownMid.copy(alpha = 0.25f)
+        )
+
+        Button(
+          onClick = {
+            viewModel.onGoogleSignInClick(context)
+          },
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+          colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White,
+            disabledContainerColor = Color.White.copy(alpha = 0.6f)
+          ),
+          shape = RoundedCornerShape(14.dp),
+          enabled = !isLoading && !isGoogleSignInLoading
         ) {
           if (isGoogleSignInLoading) {
             CircularProgressIndicator(
@@ -121,26 +245,34 @@ fun LoginScreen(
             )
           } else {
             Text(
-              "Iniciar sesión con Google",
+              text = "Continuar con Google",
               fontSize = 16.sp,
               fontWeight = FontWeight.Medium,
               color = CharcoalWarm
             )
           }
         }
-        
-        // Mostrar error si existe
+
         if (error != null) {
           Text(
-            error!!,
+            text = error ?: "",
             color = Color.Red,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(vertical = 8.dp)
+            fontSize = 13.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
           )
         }
-        
+
+        Text(
+          text = "¿No tienes cuenta? Regístrate aquí",
+          color = Siena,
+          fontSize = 14.sp,
+          fontWeight = FontWeight.SemiBold,
+          modifier = Modifier.clickable {
+            navigateToRegister()
+          }
+        )
       }
     }
   }
 }
-

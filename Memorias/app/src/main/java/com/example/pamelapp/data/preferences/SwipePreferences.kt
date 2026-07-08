@@ -11,6 +11,11 @@ class SwipePreferences(
     private val deleteModeKey = "delete_mode"
     private val showSwipeButtonsKey = "show_swipe_buttons"
 
+    private val authTokenKey = "auth_token"
+    private val refreshTokenKey = "refresh_token"
+    private val userEmailKey = "user_email"
+    private val userDisplayNameKey = "user_display_name"
+
     private val prefs = context.getSharedPreferences(
         prefsKey,
         Context.MODE_PRIVATE
@@ -36,6 +41,37 @@ class SwipePreferences(
     fun setShowSwipeButtons(show: Boolean) {
         prefs.edit {
             putBoolean(showSwipeButtonsKey, show)
+        }
+    }
+
+    fun saveAuthSession(
+        accessToken: String,
+        refreshToken: String?,
+        email: String,
+        displayName: String?
+    ) {
+        prefs.edit {
+            putString(authTokenKey, accessToken)
+            putString(refreshTokenKey, refreshToken)
+            putString(userEmailKey, email)
+            putString(userDisplayNameKey, displayName)
+        }
+    }
+
+    fun getAuthToken(): String? {
+        return prefs.getString(authTokenKey, null)
+    }
+
+    fun isLoggedIn(): Boolean {
+        return getAuthToken() != null
+    }
+
+    fun clearAuthSession() {
+        prefs.edit {
+            remove(authTokenKey)
+            remove(refreshTokenKey)
+            remove(userEmailKey)
+            remove(userDisplayNameKey)
         }
     }
 }

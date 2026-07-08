@@ -42,7 +42,9 @@ import com.example.pamelapp.ui.theme.*
 @Composable
 fun RegisterScreen(
   navigateToBack: () -> Unit,
-  viewModel: RegisterViewModel = viewModel()
+  viewModel: RegisterViewModel = viewModel(
+    factory = RegisterViewModel.provideFactory()
+  )
 ) {
   val isLoading by viewModel.isLoading.collectAsState()
   val email by viewModel.email.collectAsState()
@@ -67,7 +69,10 @@ fun RegisterScreen(
   
   LaunchedEffect(Unit) {
     viewModel.onSuccess.collect { success ->
-      if (success) navigateToBack()
+      if (success) {
+        viewModel.resetSuccess()
+        navigateToBack()
+      }
     }
   }
   
@@ -129,8 +134,10 @@ fun RegisterScreen(
         Button(
           onClick = { viewModel.onRegisterClick() },
           modifier = Modifier.fillMaxWidth(),
-          colors = ButtonDefaults.buttonColors(containerColor = if (isFormValid && !isLoading!!) Siena else BrownMid),
-          enabled = isFormValid && !isLoading!!
+          colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFormValid && !isLoading) Siena else BrownMid
+          ),
+          enabled = isFormValid && !isLoading
         ) {
           if (isLoading == true) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
