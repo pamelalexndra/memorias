@@ -1,0 +1,549 @@
+package com.pamelapp.memorias.ui.screens.configscreen
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pamelapp.memorias.domain.model.DeleteMode
+import com.pamelapp.memorias.ui.scaffold.AppScaffold
+import com.pamelapp.memorias.ui.theme.BrownLight
+import com.pamelapp.memorias.ui.theme.BrownMid
+import com.pamelapp.memorias.ui.theme.CharcoalWarm
+import com.pamelapp.memorias.ui.theme.CreamWarm
+import com.pamelapp.memorias.ui.theme.SwipeDelete
+import com.pamelapp.memorias.ui.theme.SwipeFav
+import com.pamelapp.memorias.ui.theme.SwipeKeep
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pamelapp.memorias.ui.screens.favoritesscreen.FavoritePhotoViewModel
+import com.pamelapp.memorias.ui.screens.loginscreen.LoginViewModel
+
+@Composable
+fun ConfigurationScreen(
+  navigateToBack: () -> Unit,
+  navigateToLogin: () -> Unit,
+  viewModel: ConfigurationViewModel = viewModel(),
+  favoriteViewModel: FavoritePhotoViewModel = viewModel(
+    factory = FavoritePhotoViewModel.provideFactory()
+  ),
+  loginViewModel: LoginViewModel = viewModel(factory = LoginViewModel.provideFactory())
+) {
+  val context = LocalContext.current
+  val deleteMode by viewModel.deleteMode.collectAsState()
+  val showSwipeButtons by viewModel.showSwipeButtons.collectAsState()
+  val logoutCompleted by viewModel.logoutCompleted.collectAsState()
+  val favoritePhotos by favoriteViewModel.favoritePhotos.collectAsStateWithLifecycle()
+  val isDeletingAccount by viewModel.isDeletingAccount.collectAsState()
+  val deleteAccountError by viewModel.deleteAccountError.collectAsState()
+  val isGoogleSignedIn by loginViewModel.isGoogleSignedIn.collectAsState()
+  val isSigningOut by loginViewModel.isSigningOut.collectAsState()
+  val signOutCompleted by loginViewModel.signOutCompleted.collectAsState()
+  val recycleBinMode = deleteMode == DeleteMode.TRASH
+  
+  var showClearFavoritesDialog by remember { mutableStateOf(false) }
+  var showDeleteAccountDialog by remember { mutableStateOf(false) }
+  var showLogoutDialog by remember { mutableStateOf(false) }
+  
+  LaunchedEffect(Unit) {
+    viewModel.loadSettings()
+  }
+  
+  LaunchedEffect(logoutCompleted) {
+    if (logoutCompleted) {
+      viewModel.resetLogoutState()
+      navigateToLogin()
+    }
+  }
+  
+  LaunchedEffect(signOutCompleted) {
+    if (signOutCompleted) {
+      loginViewModel.resetSignOutState()
+      navigateToLogin()
+    }
+  }
+  
+  AppScaffold(
+    title = "Configuración",
+    navigationIcon = {
+      IconButton(onClick = { navigateToBack() }) {
+        Icon(
+          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+          contentDescription = "Volver",
+          tint = Color.White
+        )
+      }
+    }
+  ) { paddingValues ->
+    LazyColumn(
+      modifier = Modifier
+        .fillMaxSize()
+        .background(CreamWarm)
+        .padding(paddingValues),
+      contentPadding = PaddingValues(16.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+      item {
+        Card(
+          modifier = Modifier.fillMaxWidth(),
+          shape = RoundedCornerShape(12.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+          Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+              text = "Método de eliminación",
+              fontWeight = FontWeight.Bold,
+              fontSize = 16.sp,
+              color = CharcoalWarm
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                  viewModel.setDeleteMode(DeleteMode.TRASH)
+                }
+                .padding(vertical = 8.dp)
+            ) {
+              RadioButton(
+                selected = recycleBinMode,
+                onClick = {
+                  viewModel.setDeleteMode(DeleteMode.TRASH)
+                },
+                colors = RadioButtonDefaults.colors(selectedColor = SwipeKeep)
+              )
+              
+              Spacer(modifier = Modifier.width(12.dp))
+              
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                  text = "Enviar a la papelera",
+                  fontWeight = FontWeight.Medium,
+                  fontSize = 14.sp,
+                  color = CharcoalWarm
+                )
+                
+                Text(
+                  text = "Las fotos se enviarán a la papelera del sistema y se pueden recuperar.",
+                  fontSize = 11.sp,
+                  color = BrownMid
+                )
+              }
+            }
+            
+            HorizontalDivider()
+            
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                  viewModel.setDeleteMode(DeleteMode.PERMANENT)
+                }
+                .padding(vertical = 8.dp)
+            ) {
+              RadioButton(
+                selected = !recycleBinMode,
+                onClick = {
+                  viewModel.setDeleteMode(DeleteMode.PERMANENT)
+                },
+                colors = RadioButtonDefaults.colors(selectedColor = SwipeDelete)
+              )
+              
+              Spacer(modifier = Modifier.width(12.dp))
+              
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                  text = "Borrar permanentemente",
+                  fontWeight = FontWeight.Medium,
+                  fontSize = 14.sp,
+                  color = CharcoalWarm
+                )
+                
+                Text(
+                  text = "Las fotos se eliminarán definitivamente sin posibilidad de recuperación.",
+                  fontSize = 11.sp,
+                  color = SwipeDelete
+                )
+              }
+            }
+          }
+        }
+      }
+      
+      item {
+        Card(
+          modifier = Modifier.fillMaxWidth(),
+          shape = RoundedCornerShape(12.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+          Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+              text = "Experiencia de uso",
+              fontWeight = FontWeight.Bold,
+              fontSize = 16.sp,
+              color = CharcoalWarm
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            SettingsSwitchOption(
+              title = "Mostrar botones en el swipe",
+              subtitle = if (showSwipeButtons) {
+                "Ten presente siempre un recordatorio de cómo usar el swipe. Izquierda: conservar - Derecha: eliminar - Arriba: favoritos - Doble toque: revertir acción"
+              } else {
+                "Los botones están ocultos. Puedes seguir usando gestos y doble toque."
+              },
+              checked = showSwipeButtons,
+              onCheckedChange = { checked ->
+                viewModel.setShowSwipeButtons(checked)
+              }
+            )
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            Text(
+              text = "Puedes ocultar los botones cuando ya te acostumbres a usar los gestos.",
+              fontSize = 11.sp,
+              color = BrownMid
+            )
+          }
+        }
+      }
+      
+      item {
+        Card(
+          modifier = Modifier.fillMaxWidth(),
+          shape = RoundedCornerShape(12.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+          Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+              text = "Gestión de datos",
+              fontWeight = FontWeight.Bold,
+              fontSize = 16.sp,
+              color = CharcoalWarm
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            SettingsOption(
+              icon = Icons.Default.Favorite,
+              title = "Quitar todas las favoritas",
+              subtitle = if (favoritePhotos.isEmpty()) {
+                "No tienes fotos favoritas guardadas."
+              } else {
+                "Se quitará la marca de ${favoritePhotos.size} foto${if (favoritePhotos.size != 1) "s" else ""} favorita${if (favoritePhotos.size != 1) "s" else ""}."
+              },
+              iconColor = SwipeFav,
+              onClick = {
+                if (favoritePhotos.isNotEmpty()) {
+                  showClearFavoritesDialog = true
+                }
+              }
+            )
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            SettingsOption(
+              icon = Icons.Default.Person,
+              title = "Borrar cuenta",
+              subtitle = if (isGoogleSignedIn) {
+                "No disponible para cuentas de Google."
+              } else {
+                "Eliminará permanentemente tu cuenta y todos los datos."
+              },
+              iconColor = if (isGoogleSignedIn) BrownMid else SwipeDelete,
+              onClick = {
+                if (!isGoogleSignedIn) {
+                  showDeleteAccountDialog = true
+                }
+              }
+            )
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            SettingsOption(
+              icon = Icons.AutoMirrored.Filled.Logout,
+              title = "Cerrar sesión",
+              subtitle = "Salir de la aplicación.",
+              iconColor = BrownMid,
+              onClick = {
+                showLogoutDialog = true
+              }
+            )
+          }
+        }
+      }
+    }
+  }
+  
+  if (showClearFavoritesDialog) {
+    AlertDialog(
+      onDismissRequest = {
+        showClearFavoritesDialog = false
+      },
+      title = {
+        Text(text = "Quitar favoritas")
+      },
+      text = {
+        Text(
+          text = "¿Quieres quitar la marca de favorita de todas las fotos guardadas en la app? Las fotos no se eliminarán del teléfono."
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showClearFavoritesDialog = false
+            favoriteViewModel.clearFavoritePhotos()
+          }
+        ) {
+          Text(
+            text = "Quitar favoritas",
+            color = SwipeFav
+          )
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            showClearFavoritesDialog = false
+          }
+        ) {
+          Text(text = "Cancelar")
+        }
+      }
+    )
+  }
+  
+  if (showDeleteAccountDialog) {
+    AlertDialog(
+      onDismissRequest = {
+        showDeleteAccountDialog = false
+      },
+      title = {
+        Text(text = "Borrar cuenta")
+      },
+      text = {
+        Text(
+          text = "Esta acción eliminará permanentemente tu cuenta y todos tus datos. ¿Estás seguro?"
+        )
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            viewModel.deleteAccount()
+            showDeleteAccountDialog = false
+          },
+          enabled = !isDeletingAccount
+        ) {
+          Text(
+            text = "Borrar cuenta",
+            color = SwipeDelete
+          )
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            showDeleteAccountDialog = false
+          }
+        ) {
+          Text(text = "Cancelar")
+        }
+      }
+    )
+  }
+  if (showLogoutDialog) {
+    AlertDialog(
+      onDismissRequest = {
+        showLogoutDialog = false
+      },
+      title = {
+        Text(text = "Cerrar sesión")
+      },
+      text = {
+        Text(text = "¿Estás seguro de que quieres cerrar sesión?")
+      },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            showLogoutDialog = false
+            if (isGoogleSignedIn) {
+              loginViewModel.signOut(context)
+            } else {
+              viewModel.logout()
+            }
+          }
+        ) {
+          Text(text = "Cerrar sesión")
+        }
+      },
+      dismissButton = {
+        TextButton(
+          onClick = {
+            showLogoutDialog = false
+          }
+        ) {
+          Text(text = "Cancelar")
+        }
+      }
+    )
+  }
+  
+  if (isDeletingAccount || isSigningOut) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .background(Color.Black.copy(alpha = 0.3f)),
+      contentAlignment = Alignment.Center
+    ) {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        CircularProgressIndicator(color = Color.White)
+        Text(
+          text = if (isDeletingAccount) "Borrando cuenta..." else "Cerrando sesión...",
+          color = Color.White,
+          fontSize = 14.sp
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun SettingsOption(
+  icon: ImageVector,
+  title: String,
+  subtitle: String,
+  iconColor: Color,
+  onClick: () -> Unit,
+) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable(onClick = onClick)
+      .padding(vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Icon(
+      imageVector = icon,
+      contentDescription = null,
+      tint = iconColor,
+      modifier = Modifier.size(24.dp)
+    )
+    
+    Spacer(modifier = Modifier.width(16.dp))
+    
+    Column(modifier = Modifier.weight(1f)) {
+      Text(
+        text = title,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        color = CharcoalWarm
+      )
+      
+      Text(
+        text = subtitle,
+        fontSize = 11.sp,
+        color = BrownMid
+      )
+    }
+    
+    Icon(
+      imageVector = Icons.Default.ChevronRight,
+      contentDescription = null,
+      tint = BrownLight,
+      modifier = Modifier.size(20.dp)
+    )
+  }
+}
+
+@Composable
+fun SettingsSwitchOption(
+  title: String,
+  subtitle: String,
+  checked: Boolean,
+  onCheckedChange: (Boolean) -> Unit,
+) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable {
+        onCheckedChange(!checked)
+      }
+      .padding(vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(modifier = Modifier.weight(1f)) {
+      Text(
+        text = title,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        color = CharcoalWarm
+      )
+      
+      Text(
+        text = subtitle,
+        fontSize = 11.sp,
+        color = BrownMid
+      )
+    }
+    
+    Spacer(modifier = Modifier.width(16.dp))
+    
+    Switch(
+      checked = checked,
+      onCheckedChange = onCheckedChange
+    )
+  }
+}

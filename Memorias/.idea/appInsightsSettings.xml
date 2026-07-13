@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AppInsightsSettings">
-    <option name="selectedTabId" value="Firebase Crashlytics" />
     <option name="tabSettings">
       <map>
         <entry key="Firebase Crashlytics">
@@ -9,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.pamelapp" />
-                  <option name="mobileSdkAppId" value="1:991046937444:android:358d8717008c9dabe62871" />
-                  <option name="projectId" value="memorias-2b19d" />
-                  <option name="projectNumber" value="991046937444" />
+                  <option name="appId" value="com.pamelapp.memorias" />
+                  <option name="mobileSdkAppId" value="1:99491507383:android:6a4b2c0024fadeec08b132" />
+                  <option name="projectId" value="memorias-login" />
+                  <option name="projectNumber" value="99491507383" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

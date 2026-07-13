@@ -1,23 +1,13 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
-  
-}
-
-val localProperties = Properties().apply {
-  val localPropertiesFile = rootProject.file("local.properties")
-  if (localPropertiesFile.exists()) {
-    load(FileInputStream(localPropertiesFile))
-  }
+  alias(libs.plugins.google.services)
 }
 
 android {
-  namespace = "com.example.pamelapp"
+  namespace = "com.pamelapp.memorias"
   compileSdk {
     version = release(36) {
       minorApiLevel = 1
@@ -25,25 +15,27 @@ android {
   }
   
   defaultConfig {
+    
     buildConfigField(
       "String",
       "BACKEND_BASE_URL",
       "\"https://memoriasbackend-production.up.railway.app\""
     )
-    applicationId = "com.example.pamelapp"
+    
+    applicationId = "com.pamelapp.memorias"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
     versionName = "1.0"
     
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    buildConfigField("String", "TMDB_TOKEN", "\"${localProperties.getProperty("tmdb_token")}\"")
   }
   
   buildTypes {
     release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      optimization {
+        enable = false
+      }
     }
   }
   compileOptions {
@@ -92,8 +84,6 @@ dependencies {
   
   implementation(platform(libs.firebase.bom))
   implementation(platform(libs.firebase.bom.v34120))
-  implementation(libs.firebase.crashlytics)
-  implementation(libs.firebase.analytics)
   implementation(libs.firebase.auth)
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.credentials.play.services.auth)
@@ -103,6 +93,7 @@ dependencies {
   implementation(libs.room.ktx)
   ksp(libs.room.compiler)
   implementation(libs.gson)
+  implementation(libs.androidx.datastore.preferences)
   
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
